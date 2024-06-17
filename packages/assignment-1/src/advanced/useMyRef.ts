@@ -1,3 +1,7 @@
+import { useRef } from "react";
+
 export function useMyRef<T>(initValue: T | null) {
-  return { current: initValue }
+  const currentRef = useRef(initValue);
+
+  return currentRef;
 }
