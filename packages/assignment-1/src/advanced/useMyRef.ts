@@ -1,7 +1,9 @@
-import { useRef } from "react";
+import { useMemo } from "react";
 
 export function useMyRef<T>(initValue: T | null) {
-  const currentRef = useRef(initValue);
+  const myRef = useMemo(() => {
+    return { current: initValue };
+  }, []);
 
-  return currentRef;
+  return myRef;
 }
