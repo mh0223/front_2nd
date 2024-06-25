@@ -234,3 +234,116 @@ export function createUnenumerableObject(target) {
 
   return object;
 }
+
+export function forEach(target, callback) {
+  // 배열 또는 NodeList일 경우
+  if (Array.isArray(target) || target instanceof NodeList) {
+    for (let i = 0; i < target.length; i++) {
+      callback(target[i], i);
+    }
+  }
+  //객체인 경우
+  else if (typeof target === "object" && target !== null) {
+    //열거할 수 없는 속성들이 나오는 이유는 createUnenumerableObject 함수에서 enumerable: false로 설정하기 때문
+    //따라서 forEach 함수에서 열거할 수 없는 속성들을 포함시키기 위해 Object.getOwnPropertyNames를 사용
+    const keys = Object.getOwnPropertyNames(target); // 열거할 수 없는 속성도 포함
+
+    for (const key of keys) {
+      callback(target[key], key);
+    }
+  }
+}
+
+export function map(target, callback) {
+  // 배열 또는 NodeList일 경우
+  if (Array.isArray(target) || target instanceof NodeList) {
+    const result = [];
+    for (let i = 0; i < target.length; i++) {
+      result.push(callback(target[i], i));
+    }
+    return result;
+  }
+  //객체인 경우
+  else if (typeof target === "object" && target !== null) {
+    const result = {};
+
+    const keys = Object.getOwnPropertyNames(target); //열거 불가능 속성도 포함
+
+    for (const key of keys) {
+      result[key] = callback(target[key], key);
+    }
+    return result;
+  }
+  return null;
+}
+
+export function filter(target, callback) {
+  // 배열 또는 NodeList일 경우
+  if (Array.isArray(target) || target instanceof NodeList) {
+    const result = [];
+    for (let i = 0; i < target.length; i++) {
+      if (callback(target[i], i)) {
+        result.push(target[i]);
+      }
+    }
+    return result;
+  }
+  //객체인경우
+  else if (typeof target === "object" && target !== null) {
+    const result = {};
+    const keys = Object.getOwnPropertyNames(target); //열거 불가능 속성도 포함
+    for (const key of keys) {
+      if (callback(target[key], key)) {
+        result[key] = target[key];
+      }
+    }
+    return result;
+  }
+  return null;
+}
+
+export function every(target, callback) {
+  // 배열 또는 NodeList일 경우
+  if (Array.isArray(target) || target instanceof NodeList) {
+    for (let i = 0; i < target.length; i++) {
+      if (!callback(target[i], i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  //객체인 경우
+  else if (typeof target === "object" && target !== null) {
+    const keys = Object.getOwnPropertyNames(target); //열거 불가능 속성도 포함
+    for (const key of keys) {
+      if (!callback(target[key], key)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+export function some(target, callback) {
+  // 배열 또는 NodeList일 경우
+  if (Array.isArray(target) || target instanceof NodeList) {
+    for (let i = 0; i < target.length; i++) {
+      if (callback(target[i], i)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  //객체인 경우
+  else if (typeof target === "object" && target !== null) {
+    const keys = Object.getOwnPropertyNames(target); //열거 불가능 속성도 포함
+    for (const key of keys) {
+      if (callback(target[key], key)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  return false;
+}
