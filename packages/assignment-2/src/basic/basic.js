@@ -171,7 +171,23 @@ export function createNumber2(n) {
 }
 
 export function createNumber3(n) {
-  return n;
+  const obj = Object.create(null);
+
+  obj.value = n;
+
+  obj.toString = function () {
+    return String(this.value);
+  };
+
+  obj.valueOf = function () {
+    return this.value;
+  };
+
+  obj.toJSON = function () {
+    return `this is createNumber3 => ${this.value}`;
+  };
+
+  return obj;
 }
 
 export class CustomNumber {}
