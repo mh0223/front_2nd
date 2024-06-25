@@ -167,7 +167,7 @@ export function createNumber1(n) {
 }
 
 export function createNumber2(n) {
-  return n;
+  return new String(n);
 }
 
 export function createNumber3(n) {
