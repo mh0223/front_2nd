@@ -61,14 +61,12 @@ export function shallowEquals(target1, target2) {
       return false;
     }
 
-    // Number, String 객체 비교 //왜 일반 객체랑 비교가 다를까?
     if (
       (target1 instanceof Number && target2 instanceof Number) ||
       (target1 instanceof String && target2 instanceof String)
     ) {
       return target1 === target2;
-      //왜 false가 나와야할까..?
-      //원시값 비교하면 true가 나오는데.. 원시값 비교가 얕은 비교인지 깊은 비교인지..?
+      //원시값 비교는 얕은 비교지만, 객체 간 비교가 아니라 "원시값" 비교이다. 그래서 여기서 === 으로 비교하였다.
     }
 
     return true;
@@ -163,45 +161,76 @@ export function deepEquals(target1, target2) {
 }
 
 export function createNumber1(n) {
-  return new Number(n);
+  return new Number(n); //Number 객체로 형변환
+  return new Number(n); //Number 객체로 형변환
 }
 
 export function createNumber2(n) {
-  return new String(n);
+  return new String(n); //String 객체로 형변환
 }
 
 export function createNumber3(n) {
-  const obj = Object.create(null);
+  const obj = Object.create(null); //Number 인스턴스가 아니어야 하고, object 타입이어야하므로 Object.create로 만듬
 
   obj.value = n;
 
   obj.toString = function () {
-    return String(this.value);
+    return String(this.value); //문자열화 되었을 때 value String화 된 거 반환
   };
 
   obj.valueOf = function () {
-    return this.value;
+    return this.value; //그냥 value 반환
   };
 
   obj.toJSON = function () {
-    return `this is createNumber3 => ${this.value}`;
+    return `this is createNumber3 => ${this.value}`; //JSON화 시켰을 때 이 문구로 반환
   };
 
   return obj;
 }
 
-export class CustomNumber {}
+const cache = new Map();
 
-export function createUnenumerableObject(target) {
-  return target;
+export class CustomNumber {
+  //class number
+  constructor(value) {
+    if (cache.has(value)) {
+      return cache.get(value);
+    }
+    this.value = value;
+    cache.set(value, this);
+  }
+
+  valueOf() {
+    return this.value;
+  }
+
+  toString() {
+    return String(this.value);
+  }
+
+  toJSON() {
+    return String(this.value);
+  }
 }
 
-export function forEach(target, callback) {}
+export function createUnenumerableObject(target) {
+  const object = {};
 
-export function map(target, callback) {}
+  for (const key in target) {
+    //hasOwnProperty: 특정 객체(target)의 고유 속성(key)을 안전하게 확인하는 방법
+    //call:call 메서드는 모든 함수에서 사용할 수 있는 JavaScript 내장 메서드로, 특정 this 값과 인수로 함수를 호출할 수 있게 함
+    if (Object.hasOwnProperty.call(target, key)) {
+      //defineProperty(): 하나의 속성을 정의
+      Object.defineProperty(object, key, {
+        //객체 내에 존재해야할 프로퍼티와 값들
+        value: target[key],
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
+    }
+  }
 
-export function filter(target, callback) {}
-
-export function every(target, callback) {}
-
-export function some(target, callback) {}
+  return object;
+}
