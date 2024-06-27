@@ -42,7 +42,16 @@ export const memo2 = (fn, array) => {
 };
 
 export const useCustomState = (initValue) => {
-  return useState(initValue);
+  const [state, setState] = useState(initValue);
+
+  const customSetState = (newState) => {
+    // 기존 상태와 새로운 상태를 깊이 비교하여 다를 경우에만 상태를 업데이트
+    if (JSON.stringify(state) !== JSON.stringify(newState)) {
+      setState(newState);
+    }
+  };
+
+  return [state, customSetState];
 };
 
 const textContextDefaultValue = {
