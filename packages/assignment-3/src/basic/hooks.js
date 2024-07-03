@@ -55,7 +55,7 @@ export function createHooks(callback) {
     currentIndex = 0; // 인덱스 초기화
     //currentIndex가 초기화되지 않으면, 다음 렌더링 시
     //currentIndex가 계속 증가하여 잘못된 인덱스에 접근하게 됨
-    currentMemoIndex = 0; //이렇게 currentIndex랑 같이 초기화되어도 되는건가요?
+    currentMemoIndex = 0;
   };
 
   return { useState, useMemo, resetContext };
