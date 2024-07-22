@@ -19,15 +19,11 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: packages/assignment-6
-
       - name: Run tsc and build
         id: build
-        run: npm run build # package.json "build" : "tsc -b && vite build"
+        run: npm run build
         working-directory: packages/assignment-6
-        continue-on-error: true
+        # continue-on-error: true # 명령이 실패하더라도 (예: 빌드 오류 발생) 워크플로우는 계속 진행
 
       - name: Comment PR on Failure
         if: failure() && steps.build.outcome == 'failure'
@@ -46,7 +42,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: job2 구현 - eslint를 실행한 다음에, eslint에서 오류가 발생할 경우 report를 코멘트에 남긴다.
-        run: echo "job2의 내용을 구현해주세요"
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+
+      - name: Install Node.js dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: packages/assignment-6
+
+      - name: Run Eslint
+        id: lint
+        run: |
+          npm run lint > eslint-output.txt
+          cat eslint-output.txt
+        working-directory: packages/assignment-6
+
+      - name: Comment PR on Failure
+        if: failure() && steps.lint.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+          script: |
+            const fs = require('fs');
+            const lintOutput = fs.readFileSync('packages/assignment-6/eslint-output.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `\n\n\`\`\`\n${lintOutput}\n\`\`\``
+            })
 
   test:
     runs-on: ubuntu-latest
