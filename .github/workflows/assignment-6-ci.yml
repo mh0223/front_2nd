@@ -3,8 +3,7 @@ name: CI Assignment 6
 # 1. workflow는 PR이 올라오거나 혹은 PR에 commit이 push될 때 실행 된다.
 on:
   pull_request:
-    types:
-      - [opened, synchronize]
+    types: [opened, synchronize]
     paths:
       - "packages/assignment-6/**"
 
@@ -42,6 +41,7 @@ jobs:
           repo: context.repo.repo,
           body: '빌드 과정에서 오류가 발생했습니다. 로그를 확인해 주세요.'
           })
+
   lint:
     runs-on: ubuntu-latest
     steps:
