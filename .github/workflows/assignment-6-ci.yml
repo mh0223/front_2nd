@@ -178,6 +178,7 @@ jobs:
         run: |
           npm install -g @lhci/cli
           lhci autorun || echo "Fail to Run Lighthouse CI!"
+        working-directory: packages/assignment-6
 
   assign_reviewer:
     runs-on: ubuntu-latest
