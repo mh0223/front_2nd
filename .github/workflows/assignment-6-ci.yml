@@ -98,9 +98,23 @@ jobs:
 
       - name: Run Coverage
         id: coverage
-        run: npm run coverage
-        if: always()
+        run: npm run coverage > coverage-report.txt
         working-directory: packages/assignment-6
+
+      - name: Comment PR with Coverage
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+          script: |
+            const fs = require('fs')
+            const coverageReport = fs.readFileSync('packages/assignment-6/coverage-report.txt', 'utf8')
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Coverage Report\n\n\`\`\`\n${coverageReport}\n\`\`\``
+            })
 
   lighthouse:
     runs-on: ubuntu-latest
