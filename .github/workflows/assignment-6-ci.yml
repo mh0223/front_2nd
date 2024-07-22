@@ -99,6 +99,7 @@ jobs:
       - name: Run Coverage
         id: coverage
         run: npm run coverage
+        if: always()
         working-directory: packages/assignment-6
 
   lighthouse:
