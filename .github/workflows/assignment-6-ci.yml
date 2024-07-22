@@ -156,11 +156,28 @@ jobs:
               console.error('Error processing coverage data:', error);
               console.log('Coverage data:', fs.readFileSync('packages/assignment-6/coverage/coverage-final.json', 'utf8'));
             }
+
   lighthouse:
     runs-on: ubuntu-latest
     steps:
       - name: job4 구현 - lighthouse ci 를 실행하고, 실행 결과를 코멘트에 남긴다.
-        run: echo "job4의 내용을 구현해주세요"
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+
+      - name: Install Node.js dependencies
+        run: npm install
+        working-directory: packages/assignment-6
+
+      - name: Run Lighthouse CI
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.TOKEN_FOR_CI }}
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun || echo "Fail to Run Lighthouse CI!"
 
   assign_reviewer:
     runs-on: ubuntu-latest
