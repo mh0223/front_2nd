@@ -98,7 +98,7 @@ jobs:
 
       - name: Run Coverage
         id: coverage
-        run: npm run coverage > coverage-report.txt
+        run: npm run coverage
         working-directory: packages/assignment-6
 
       - name: Comment PR with Coverage
@@ -107,15 +107,55 @@ jobs:
         with:
           github-token: ${{secrets.TOKEN_FOR_CI}}
           script: |
-            const fs = require('fs')
-            const coverageReport = fs.readFileSync('packages/assignment-6/coverage-report.txt', 'utf8')
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## Coverage Report\n\n\`\`\`\n${coverageReport}\n\`\`\``
-            })
+            const fs = require('fs');
+            try {
+              const coverageData = JSON.parse(fs.readFileSync('packages/assignment-6/coverage/coverage-final.json', 'utf8'));
+              
+              const totalCoverage = {
+                statements: { total: 0, covered: 0 },
+                branches: { total: 0, covered: 0 },
+                functions: { total: 0, covered: 0 },
+                lines: { total: 0, covered: 0 }
+              };
 
+              Object.values(coverageData).forEach(file => {
+                if (file.s) {
+                  totalCoverage.statements.total += Object.keys(file.s).length;
+                  totalCoverage.statements.covered += Object.values(file.s).filter(v => v > 0).length;
+                }
+                if (file.b) {
+                  totalCoverage.branches.total += Object.values(file.b).flat().length;
+                  totalCoverage.branches.covered += Object.values(file.b).flat().filter(v => v > 0).length;
+                }
+                if (file.f) {
+                  totalCoverage.functions.total += Object.keys(file.f).length;
+                  totalCoverage.functions.covered += Object.values(file.f).filter(v => v > 0).length;
+                }
+                if (file.statementMap) {
+                  totalCoverage.lines.total += Object.keys(file.statementMap).length;
+                  totalCoverage.lines.covered += Object.values(file.s).filter(v => v > 0).length;
+                }
+              });
+
+              const formatPercentage = (covered, total) => ((covered / total) * 100).toFixed(2);
+
+              let markdownReport = '## 테스트 성공 ✅\n\n';
+              markdownReport += '### 커버리지 결과\n\n';
+              markdownReport += `- 라인 커버리지: ${formatPercentage(totalCoverage.lines.covered, totalCoverage.lines.total)}%\n`;
+              markdownReport += `- 함수 커버리지: ${formatPercentage(totalCoverage.functions.covered, totalCoverage.functions.total)}%\n`;
+              markdownReport += `- 브랜치 커버리지: ${formatPercentage(totalCoverage.branches.covered, totalCoverage.branches.total)}%\n`;
+              markdownReport += `- 구문 커버리지: ${formatPercentage(totalCoverage.statements.covered, totalCoverage.statements.total)}%\n`;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: markdownReport
+              });
+            } catch (error) {
+              console.error('Error processing coverage data:', error);
+              console.log('Coverage data:', fs.readFileSync('packages/assignment-6/coverage/coverage-final.json', 'utf8'));
+            }
   lighthouse:
     runs-on: ubuntu-latest
     steps:
