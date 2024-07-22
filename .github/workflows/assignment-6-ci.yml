@@ -64,17 +64,16 @@ jobs:
         with:
           github-token: ${{secrets.TOKEN_FOR_CI}}
           script: |
-            const lintOutput = `${{ steps.lint.outputs.stderr }}${{ steps.lint.outputs.stdout }}`;
+            const lintOutput = `${{ steps.lint.outputs.lint_output }}`;
+            const formattedOutput = lintOutput.split('\n')
+              .filter(line => !line.startsWith('npm error'))
+              .join('\n');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `린트 과정에서 오류가 발생했습니다. 아래 린트 리포트를 확인해 주세요:
-
-            \`\`\`
-            ${lintOutput}
-            \`\`\``
-            })
+              body: `\`\`\`\n${formattedOutput}\n\`\`\``
+            });
 
   test:
     runs-on: ubuntu-latest
