@@ -13,8 +13,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: job1 구현 -  tsc, build 를 실행한다. 오류가 발생하면 코멘트를 남긴다.
-        run: echo "job1의 내용을 구현해주세요"
+      - uses: actions/checkout@v2
 
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+        node-version: "20.x"
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: packages/assignment-6
+
+      - name: Run tsc and build
+        id: build
+        run: npm run build # package.json "build" : "tsc -b && vite build"
+        working-directory: packages/assignment-6
+        continue-on-error: true
+
+      - name: Comment PR on Failure
+        if: failure() && steps.build.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+        script: |
+          github.rest.issues.createComment({
+          issue_number: context.issue.number,
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          body: '빌드 과정에서 오류가 발생했습니다. 로그를 확인해 주세요.'
+          })
   lint:
     runs-on: ubuntu-latest
     steps:
