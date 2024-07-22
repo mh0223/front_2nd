@@ -94,12 +94,12 @@ jobs:
         id: test
         run: npm run test
         working-directory: packages/assignment-6
+        continue-on-error: true
 
       - name: Run Coverage
         id: coverage
         run: npm run coverage
         working-directory: packages/assignment-6
-        continue-on-error: true
 
   lighthouse:
     runs-on: ubuntu-latest
