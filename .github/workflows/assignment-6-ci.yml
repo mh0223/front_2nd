@@ -50,7 +50,7 @@ jobs:
           node-version: "20.x"
 
       - name: Install Node.js dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
         working-directory: packages/assignment-6
 
       - name: Run Eslint
@@ -87,7 +87,7 @@ jobs:
           node-version: "20.x"
 
       - name: Install Node.js dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
         working-directory: packages/assignment-6
 
       - name: Run Test
@@ -168,7 +168,7 @@ jobs:
           node-version: "20.x"
 
       - name: Install Node.js dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
         working-directory: packages/assignment-6
 
       - name: Run Lighthouse CI
