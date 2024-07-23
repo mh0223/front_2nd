@@ -1,39 +1,277 @@
 name: CI Assignment 6
 
+# 1. workflow는 PR이 올라오거나 혹은 PR에 commit이 push될 때 실행 된다.
 on:
   pull_request:
-    types:
-      - opened
+    types: [opened, synchronize]
     paths:
-      - 'packages/assignment-6/**'
+      - "packages/assignment-6/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: job1 구현
-        run: echo "job1의 내용을 구현해주세요"
+      - name: job1 구현 -  tsc, build 를 실행한다. 오류가 발생하면 코멘트를 남긴다.
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+
+      - name: Run tsc and build
+        id: build
+        run: npm run build
+        working-directory: packages/assignment-6
+        # continue-on-error: true # 명령이 실패하더라도 (예: 빌드 오류 발생) 워크플로우는 계속 진행
+
+      - name: Comment PR on Failure
+        if: failure() && steps.build.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+          script: |
+            github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '빌드 과정에서 오류가 발생했습니다. 로그를 확인해 주세요.'
+            })
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: job2 구현
-        run: echo "job2의 내용을 구현해주세요"
+      - name: job2 구현 - eslint를 실행한 다음에, eslint에서 오류가 발생할 경우 report를 코멘트에 남긴다.
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+
+      - name: Install Node.js dependencies
+        run: npm install
+        working-directory: packages/assignment-6
+
+      - name: Run Eslint
+        id: lint
+        run: |
+          npm run lint > eslint-output.txt
+          cat eslint-output.txt
+        working-directory: packages/assignment-6
+
+      - name: Comment PR on Failure
+        if: failure() && steps.lint.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+          script: |
+            const fs = require('fs');
+            const lintOutput = fs.readFileSync('packages/assignment-6/eslint-output.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### ESLint Results\n\n${lintOutput}`
+            })
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: job3 구현
-        run: echo "job3의 내용을 구현해주세요"
+      - name: job3 구현 - 테스트를 실행하고, 커버리지를 측정하여 코멘트에 남긴다.
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+
+      - name: Install Node.js dependencies
+        run: npm install
+        working-directory: packages/assignment-6
+
+      - name: Run Test
+        id: test
+        run: npm run test
+        working-directory: packages/assignment-6
+        continue-on-error: true
+
+      - name: Run Coverage
+        id: coverage
+        run: npm run coverage
+        working-directory: packages/assignment-6
+
+      - name: Comment PR with Coverage
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+          script: |
+            const fs = require('fs');
+            try {
+              const coverageData = JSON.parse(fs.readFileSync('packages/assignment-6/coverage/coverage-final.json', 'utf8'));
+              
+              const totalCoverage = {
+                statements: { total: 0, covered: 0 },
+                branches: { total: 0, covered: 0 },
+                functions: { total: 0, covered: 0 },
+                lines: { total: 0, covered: 0 }
+              };
+
+              Object.values(coverageData).forEach(file => {
+                if (file.s) {
+                  totalCoverage.statements.total += Object.keys(file.s).length;
+                  totalCoverage.statements.covered += Object.values(file.s).filter(v => v > 0).length;
+                }
+                if (file.b) {
+                  totalCoverage.branches.total += Object.values(file.b).flat().length;
+                  totalCoverage.branches.covered += Object.values(file.b).flat().filter(v => v > 0).length;
+                }
+                if (file.f) {
+                  totalCoverage.functions.total += Object.keys(file.f).length;
+                  totalCoverage.functions.covered += Object.values(file.f).filter(v => v > 0).length;
+                }
+                if (file.statementMap) {
+                  totalCoverage.lines.total += Object.keys(file.statementMap).length;
+                  totalCoverage.lines.covered += Object.values(file.s).filter(v => v > 0).length;
+                }
+              });
+
+              const formatPercentage = (covered, total) => ((covered / total) * 100).toFixed(2);
+
+              let markdownReport = '## 테스트 성공 ✅\n\n';
+              markdownReport += '### 커버리지 결과\n\n';
+              markdownReport += `- 라인 커버리지: ${formatPercentage(totalCoverage.lines.covered, totalCoverage.lines.total)}%\n`;
+              markdownReport += `- 함수 커버리지: ${formatPercentage(totalCoverage.functions.covered, totalCoverage.functions.total)}%\n`;
+              markdownReport += `- 브랜치 커버리지: ${formatPercentage(totalCoverage.branches.covered, totalCoverage.branches.total)}%\n`;
+              markdownReport += `- 구문 커버리지: ${formatPercentage(totalCoverage.statements.covered, totalCoverage.statements.total)}%\n`;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: markdownReport
+              });
+            } catch (error) {
+              console.error('Error processing coverage data:', error);
+              console.log('Coverage data:', fs.readFileSync('packages/assignment-6/coverage/coverage-final.json', 'utf8'));
+            }
 
   lighthouse:
     runs-on: ubuntu-latest
     steps:
-      - name: job4 구현
-        run: echo "job4의 내용을 구현해주세요"
+      - name: job4 구현 - lighthouse ci 를 실행하고, 실행 결과를 코멘트에 남긴다.
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+
+      - name: Install Node.js dependencies
+        run: npm install
+        working-directory: packages/assignment-6
+
+      - name: Run Lighthouse CI
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.TOKEN_FOR_CI }}
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun
+        working-directory: packages/assignment-6
+
+      - name: Read Lighthouse Report
+        id: read_report
+        run: |
+          REPORT=$(node << EOF
+          const fs = require('fs');
+          const lhciManifest = require('./packages/assignment-6/lhci_reports/manifest.json');
+          const medianEntry = lhciManifest.find(entry => entry.isRepresentativeRun);
+          const medianResult = JSON.parse(fs.readFileSync(medianEntry.jsonPath, 'utf-8'));
+          const scores = {
+            performance: medianResult.categories.performance.score * 100,
+            accessibility: medianResult.categories.accessibility.score * 100,
+            'best-practices': medianResult.categories['best-practices'].score * 100,
+            seo: medianResult.categories.seo.score * 100
+          };
+          console.log(JSON.stringify(scores));
+          EOF
+          )
+          echo "report=$REPORT" >> $GITHUB_OUTPUT
+
+      - name: Comment PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+          script: |
+            const scores = JSON.parse('${{ steps.read_report.outputs.report }}');
+            const formatScore = (score) => Math.round(score);
+            const scoreEmoji = (score) => score >= 90 ? '🟢' : score >= 50 ? '🟠' : '🔴';
+
+            const scoreTable = [
+              `| Category | Score | Emoji |`,
+              `| -------- | ----- | ----- |`,
+              `| Performance | ${formatScore(scores.performance)} | ${scoreEmoji(scores.performance)} |`,
+              `| Accessibility | ${formatScore(scores.accessibility)} | ${scoreEmoji(scores.accessibility)} |`,
+              `| Best Practices | ${formatScore(scores['best-practices'])} | ${scoreEmoji(scores['best-practices'])} |`,
+              `| SEO | ${formatScore(scores.seo)} | ${scoreEmoji(scores.seo)} |`,
+            ].join('\n');
+
+            const comment = `
+            ## 🚦 Lighthouse Report
+
+            ${scoreTable}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            })
 
   assign_reviewer:
     runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+
     steps:
-      - name: job5 구현
-        run: echo "job5의 내용을 구현해주세요"
+      - name: job5 구현 - PR이 open될 때만 실행되고, 팀원 중 한 명을 랜덤으로 선정하여 리뷰어를 지정한 다음에 코멘트에 멘션하여 올린다. 실제로 PR에 리뷰어로 지정도 되어야한다.
+        uses: actions/checkout@v2
+
+      - name: Add collaborators
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_FOR_CI }}
+        run: |
+          gh api repos/${{ github.repository }}/collaborators/ChanggiJeon -X PUT -f permission=push
+          gh api repos/${{ github.repository }}/collaborators/juhongahn -X PUT -f permission=push
+
+      - name: Pick a teammate randomly & select him as reviewer & request review
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.TOKEN_FOR_CI}}
+          script: |
+            const myTeammates = [
+            {name:'전창기', github: 'ChanggiJeon'},
+            {name:'안주홍', github: 'juhongahn'}
+            ];
+            const randomIndex = Math.round(Math.random());
+            const reviewerName = myTeammates[randomIndex].name;
+            const reviewerGithub = myTeammates[randomIndex].github;
+
+            const comment = `
+            ## @${reviewerGithub} ${reviewerName} 당첨~~!
+            `;
+
+            github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+             })
+
+            github.rest.pulls.requestReviewers({
+              pull_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              reviewers: [reviewerGithub]
+            })
