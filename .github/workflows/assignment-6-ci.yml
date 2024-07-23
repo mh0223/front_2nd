@@ -258,7 +258,7 @@ jobs:
             const reviewerGithub = myTeammates[randomIndex].github;
 
             const comment = `
-            ## @${reviewerGithub} ${reviewerName} 당첨~~!
+            ## @${reviewerGithub} ${reviewerName}님 당첨~~!
             `;
 
             github.rest.issues.createComment({
@@ -268,9 +268,9 @@ jobs:
             body: comment
              })
 
-            github.rest.pulls.requestReviewers({
-              pull_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              reviewers: [reviewerGithub]
-            })
+        # github.rest.pulls.requestReviewers({
+        #   pull_number: context.issue.number,
+        #   owner: context.repo.owner,
+        #   repo: context.repo.repo,
+        #   reviewers: [reviewerGithub]
+        # })
