@@ -244,6 +244,7 @@ jobs:
         run: |
           gh api repos/${{ github.repository }}/collaborators/ChanggiJeon -X PUT -f permission=push
           gh api repos/${{ github.repository }}/collaborators/juhongahn -X PUT -f permission=push
+          sleep 10
 
       - name: Pick a teammate randomly & select him as reviewer & request review
         uses: actions/github-script@v6
@@ -262,14 +263,14 @@ jobs:
             ## @${reviewerGithub} ${reviewerName} 당첨~~!
             `;
 
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: comment
              })
 
-            github.rest.pulls.requestReviewers({
+             await github.rest.pulls.requestReviewers({
               pull_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
