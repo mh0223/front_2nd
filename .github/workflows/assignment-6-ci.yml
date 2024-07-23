@@ -238,6 +238,13 @@ jobs:
       - name: job5 구현 - PR이 open될 때만 실행되고, 팀원 중 한 명을 랜덤으로 선정하여 리뷰어를 지정한 다음에 코멘트에 멘션하여 올린다. 실제로 PR에 리뷰어로 지정도 되어야한다.
         uses: actions/checkout@v2
 
+      - name: Add collaborators
+        env:
+          github-token: ${{ secrets.TOKEN_FOR_CI }}
+        run: |
+          gh repo add-collaborator ${{ github.repository }} ChanggiJeon --permission write
+          gh repo add-collaborator ${{ github.repository }} juhongahn --permission write
+
       - name: Pick a teammate randomly & select him as reviewer & request review
         uses: actions/github-script@v6
         with:
