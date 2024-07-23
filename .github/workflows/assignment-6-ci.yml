@@ -94,7 +94,6 @@ jobs:
         id: test
         run: npm run test
         working-directory: packages/assignment-6
-        continue-on-error: true
 
       - name: Run Coverage
         id: coverage
