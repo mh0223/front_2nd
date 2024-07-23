@@ -1,162 +1,217 @@
+const P1_DISCOUNT_RATIO = 0.1;
+const P2_DISCOUNT_RATIO = 0.15;
+const P3_DISCOUNT_RATIO = 0.2;
+const BULK_DISCOUNT_RATIO = 0.25;
+
+const PRODUCT_DISCOUNT_QUANTITY = 10;
+const BULK_DISCOUNT_QUANTITY = 30;
+
+// 상수로
+// let products = [
+//   { id: 'p1', name: '상품1', price: 10000 },
+//   { id: 'p2', name: '상품2', price: 20000 },
+//   { id: 'p3', name: '상품3', price: 30000 },
+// ];
+
+//함수마다 주석 달았음 좋겠음!
+
 function main() {
-  var p = [
-    {id: 'p1', n: '상품1', p: 10000 },
-    {id: 'p2', n: '상품2', p: 20000 },
-    {id: 'p3', n: '상품3', p: 30000 }
+  let products = [
+    { id: 'p1', name: '상품1', price: 10000 },
+    { id: 'p2', name: '상품2', price: 20000 },
+    { id: 'p3', name: '상품3', price: 30000 },
   ];
 
-  var a = document.getElementById('app');
-  var w = document.createElement('div');
-  var b = document.createElement('div');
-  var h = document.createElement('h1');
-  var ct = document.createElement('div');
-  var tt = document.createElement('div');
-  var s = document.createElement('select');
-  var ab = document.createElement('button');
+  const addHTMLToParent = (html, parent) => {
+    if ((!parent) instanceof Node) throw Error('parent is not Node');
 
-  ct.id = 'cart-items';
-  tt.id = 'cart-total';
-  s.id = 'product-select';
-  ab.id = 'add-to-cart';
-  w.className = 'bg-gray-100 p-8';
-  b.className = 'max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8';
-  h.className = 'text-2xl font-bold mb-4';
-  tt.className = 'text-xl font-bold my-4';
-  s.className = 'border rounded p-2 mr-2';
-  ab.className = 'bg-blue-500 text-white px-4 py-2 rounded';
-  h.textContent = '장바구니';
-  ab.textContent = '추가';
+    const childFragment = document.createRange().createContextualFragment(html);
+    parent.appendChild(childFragment);
+  };
 
-  for (var j = 0; j < p.length; j++) {
-    var o = document.createElement('option');
-    o.value = p[j].id;
-    o.textContent = p[j].n + ' - ' + p[j].p + '원';
-    s.appendChild(o);
-  }
+  const rootHTML = `
+    <div id="app">
+      <div class="bg-gray-100 p-8">
+        <div
+          class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8'"
+        >
+          <h1 class="text-2xl font-bold mb-4">장바구니</h1>
+          <div id="cart-items"></div>
+          <div id="cart-total" class="text-xl font-bold my-4"></div>
+          <select
+            id="product-select"
+            class="border rounded p-2 mr-2"
+          ></select>
+          <button
+            id="add-to-cart"
+            class="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            추가
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  addHTMLToParent(rootHTML, document.body);
 
-  b.appendChild(h);
-  b.appendChild(ct);
-  b.appendChild(tt);
-  b.appendChild(s);
-  b.appendChild(ab);
-  w.appendChild(b);
-  a.appendChild(w);
+  const cartSelectElement = document.getElementById('product-select');
+  products.forEach((product) => {
+    const selectOptionHTML = `
+    <option value="${product.id}">${product.name + ' - ' + product.price + '원'}</option>
+    `;
 
+    addHTMLToParent(selectOptionHTML, cartSelectElement);
+  });
 
-  function uc() {
-    var t = 0;
-    var tq = 0;
-    var items = ct.children;
-    var tb = 0;
+  const getItemQuantity = (element) => {
+    return parseInt(element.querySelector('span').textContent.split('x ')[1]);
+  };
 
-    for (var m = 0; m < items.length; m++) {
-      var item;
-      for (var n = 0; n < p.length; n++) {
-        if (p[n].id === items[m].id) {
-          item = p[n];
+  function updateCart() {
+    let cartNoDiscountPrice = 0;
+    let cartTotalPrice = 0;
+    let cartTotalQuantity = 0;
+
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartTotalPriceElement = document.getElementById('cart-total');
+    const cartItemsElements = cartItemsContainer.children;
+
+    for (let m = 0; m < cartItemsElements.length; m++) {
+      let product;
+      for (let n = 0; n < products.length; n++) {
+        if (products[n].id === cartItemsElements[m].id) {
+          product = products[n];
           break;
         }
       }
-      var quantity = parseInt(items[m].querySelector('span').textContent.split('x ')[1]);
-      var itemTotal = item.p * quantity;
-      var disc = 0;
 
-      tq += quantity;
-      tb += itemTotal;
-      if (quantity >= 10) {
-        if (item.id === 'p1') disc = 0.1;
-        else if (item.id === 'p2') disc = 0.15;
-        else if (item.id === 'p3') disc = 0.2;
+      let productQuantity = getItemQuantity(cartItemsElements[m]);
+
+      let productTotalPrice = product.price * productQuantity;
+      let discount = 0;
+
+      cartTotalQuantity += productQuantity;
+      cartNoDiscountPrice += productTotalPrice;
+
+      if (productQuantity >= PRODUCT_DISCOUNT_QUANTITY) {
+        if (product.id === 'p1') discount = P1_DISCOUNT_RATIO;
+        if (product.id === 'p2') discount = P2_DISCOUNT_RATIO;
+        if (product.id === 'p3') discount = P3_DISCOUNT_RATIO;
       }
-      t += itemTotal * (1 - disc);
+      cartTotalPrice += productTotalPrice * (1 - discount);
     }
 
-    var dr = 0;
-    if (tq >= 30) {
-      var bulkDiscount = t * 0.25;
-      var individualDiscount = tb - t;
+    let discountRatio = 0;
+
+    if (cartTotalQuantity >= BULK_DISCOUNT_QUANTITY) {
+      let bulkDiscount = cartTotalPrice * BULK_DISCOUNT_RATIO;
+      let individualDiscount = cartNoDiscountPrice - cartTotalPrice;
+
       if (bulkDiscount > individualDiscount) {
-        t = tb * 0.75;
-        dr = 0.25;
+        cartTotalPrice = cartNoDiscountPrice * (1 - BULK_DISCOUNT_RATIO);
+        discountRatio = BULK_DISCOUNT_RATIO;
       } else {
-        dr = (tb - t) / tb;
+        discountRatio =
+          (cartNoDiscountPrice - cartTotalPrice) / cartNoDiscountPrice;
       }
     } else {
-      dr = (tb - t) / tb;
+      discountRatio =
+        (cartNoDiscountPrice - cartTotalPrice) / cartNoDiscountPrice;
     }
 
-    tt.textContent = '총액: ' + Math.round(t) + '원';
-    if (dr > 0) {
-      var dspan = document.createElement('span');
-      dspan.className = 'text-green-500 ml-2';
-      dspan.textContent = '(' + (dr * 100).toFixed(1) + '% 할인 적용)';
-      tt.appendChild(dspan);
+    cartTotalPriceElement.textContent =
+      '총액: ' + Math.round(cartTotalPrice) + '원';
+
+    if (discountRatio > 0) {
+      const discountHTML = `
+          <span class="text-green-500 ml-2'">
+          ${'(' + (discountRatio * 100).toFixed(1) + '% 할인 적용)'}
+          </span>
+      `;
+
+      addHTMLToParent(discountHTML, cartTotalPriceElement);
     }
   }
 
-  ab.onclick = function() {
-    var v = s.value;
-    var i;
-    for (var k = 0; k < p.length; k++) {
-      if (p[k].id === v) {
-        i = p[k];
+  const cartAddItemBtn = document.getElementById('add-to-cart');
+  cartAddItemBtn.onclick = function () {
+    let cartSelectValue = cartSelectElement.value;
+    let cartItem;
+
+    for (var k = 0; k < products.length; k++) {
+      if (products[k].id === cartSelectValue) {
+        cartItem = products[k];
         break;
       }
     }
-    if (i) {
-      var e = document.getElementById(i.id);
-      if (e) {
-        var q = parseInt(e.querySelector('span').textContent.split('x ')[1]) + 1;
-        e.querySelector('span').textContent = i.n + ' - ' + i.p + '원 x ' + q;
+
+    if (cartItem) {
+      const cartItemElement = document.getElementById(cartItem.id);
+      if (cartItemElement) {
+        let cartItemQuantity = getItemQuantity(cartItemElement) + 1;
+
+        cartItemElement.querySelector('span').textContent =
+          cartItem.name + ' - ' + cartItem.price + '원 x ' + cartItemQuantity;
       } else {
-        var d = document.createElement('div');
-        var sp = document.createElement('span');
-        var bd = document.createElement('div');
-        var mb = document.createElement('button');
-        var pb = document.createElement('button');
-        var rb = document.createElement('button');
-        d.id = i.id;
-        d.className = 'flex justify-between items-center mb-2';
-        sp.textContent = i.n + ' - ' + i.p + '원 x 1';
-        mb.className = 'quantity-change bg-blue-500 text-white px-2 py-1 rounded mr-1';
-        mb.textContent = '-';
-        mb.dataset.productId = i.id;
-        mb.dataset.change = '-1';
-        pb.className = 'quantity-change bg-blue-500 text-white px-2 py-1 rounded mr-1';
-        pb.textContent = '+';
-        pb.dataset.productId = i.id;
-        pb.dataset.change = '1';
-        rb.className = 'remove-item bg-red-500 text-white px-2 py-1 rounded';
-        rb.textContent = '삭제';
-        rb.dataset.productId = i.id;
-        bd.appendChild(mb);
-        bd.appendChild(pb);
-        bd.appendChild(rb);
-        d.appendChild(sp);
-        d.appendChild(bd);
-        ct.appendChild(d);
+        const cartItemHTML = `
+        <div id="${cartItem.id}" class="flex justify-between items-center mb-2">
+      <span>${cartItem.name + ' - ' + cartItem.price + '원 x 1'}</span>
+      <div>
+        <button
+          class="quantity-change bg-blue-500 text-white px-2 py-1 rounded mr-1"
+          data-product-id="${cartItem.id}"
+          data-change="-1"
+        >
+          -
+        </button>
+        <button
+          class="quantity-change bg-blue-500 text-white px-2 py-1 rounded mr-1"
+          data-product-id="${cartItem.id}"
+          data-change="1"
+        >
+          +
+        </button>
+        <button
+          class="remove-item bg-red-500 text-white px-2 py-1 rounded"
+          data-product-id="${cartItem.id}"
+        >
+          삭제
+        </button>
+      </div>
+    </div>
+       `;
+
+        addHTMLToParent(cartItemHTML, cartItemsContainer);
       }
-      uc();
+      updateCart();
     }
   };
 
-  ct.onclick = function(event) {
-    var target = event.target;
-    if (target.classList.contains('quantity-change') || target.classList.contains('remove-item')) {
-      var productId = target.dataset.productId;
-      var item = document.getElementById(productId);
+  const cartItemsContainer = document.getElementById('cart-items');
+  cartItemsContainer.onclick = function (event) {
+    let target = event.target;
+    if (
+      target.classList.contains('quantity-change') ||
+      target.classList.contains('remove-item')
+    ) {
+      let productId = target.dataset.productId;
+      const cartItemElement = document.getElementById(productId);
       if (target.classList.contains('quantity-change')) {
-        var change = parseInt(target.dataset.change);
-        var quantity = parseInt(item.querySelector('span').textContent.split('x ')[1]) + change;
+        let change = parseInt(target.dataset.change);
+        let quantity = getItemQuantity(cartItemElement) + change;
+
         if (quantity > 0) {
-          item.querySelector('span').textContent = item.querySelector('span').textContent.split('x ')[0] + 'x ' + quantity;
+          cartItemElement.querySelector('span').textContent =
+            cartItemElement.querySelector('span').textContent.split('x ')[0] +
+            'x ' +
+            quantity;
         } else {
-          item.remove();
+          cartItemElement.remove();
         }
       } else if (target.classList.contains('remove-item')) {
-        item.remove();
+        cartItemElement.remove();
       }
-      uc();
+      updateCart();
     }
   };
 }
