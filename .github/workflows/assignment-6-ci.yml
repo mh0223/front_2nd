@@ -240,7 +240,7 @@ jobs:
 
       - name: Add collaborators
         env:
-          github-token: ${{ secrets.TOKEN_FOR_CI }}
+          GH_TOKEN: ${{ secrets.TOKEN_FOR_CI }}
         run: |
           gh api repos/${{ github.repository }}/collaborators/ChanggiJeon -X PUT -f permission=push
           gh api repos/${{ github.repository }}/collaborators/juhongahn -X PUT -f permission=push
