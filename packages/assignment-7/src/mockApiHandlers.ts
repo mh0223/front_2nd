@@ -32,7 +32,7 @@ let events = [
     location: "알림 테스트",
     category: "기타",
     repeat: { type: "weekly", interval: 1 },
-    notificationTime: 10,
+    notificationTime: 60,
     ...(() => {
       const now = new Date();
       const startTime = new Date(now.getTime() + 5 * 60000); // 5분 후

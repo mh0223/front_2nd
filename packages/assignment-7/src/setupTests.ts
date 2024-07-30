@@ -4,7 +4,9 @@ import { mockApiHandlers } from "./mockApiHandlers.ts";
 
 const server = setupServer(...mockApiHandlers);
 
-beforeAll(() => server.listen());
+beforeAll(() => {
+  server.listen();
+});
 
 afterEach(() => {
   server.resetHandlers();
