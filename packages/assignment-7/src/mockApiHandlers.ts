@@ -63,10 +63,14 @@ export const mockApiHandlers = [
 
   // 일정 추가
   http.post("/api/events", async ({ request }) => {
-    const userEvent = (await request.json()) as Event;
+    const { id, ...rest } = (await request.json()) as Event;
+    const newEvent = {
+      id: events.length + 1,
+      ...rest,
+    };
 
-    events.push(userEvent);
-    return HttpResponse.json(userEvent, { status: 201 });
+    events.push(newEvent);
+    return HttpResponse.json(newEvent, { status: 201 });
   }),
 
   // 일정 수정
@@ -84,10 +88,11 @@ export const mockApiHandlers = [
   }),
 
   // 일정 삭제
-  http.delete("/api/events/:id", ({ params }) => {
-    const id = Array.isArray(params.id)
-      ? parseInt(params.id[0])
-      : parseInt(params.id[0]);
+  http.delete("/api/events/:id", ({ request, params }) => {
+    // const id = Array.isArray(params.id)
+    //   ? parseInt(params.id[0])
+    //   : parseInt(params.id[0]);
+    const id = parseInt(params.id[0]);
     events = events.filter((event) => event.id !== id);
     return new HttpResponse(null, { status: 204 });
   }),
