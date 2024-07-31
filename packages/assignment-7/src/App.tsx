@@ -833,7 +833,7 @@ function App() {
         </VStack>
 
         <VStack
-          role="searchItems"
+          role="searchItemsContainer"
           data-testid="event-list"
           w="500px"
           h="full"
@@ -853,6 +853,7 @@ function App() {
           ) : (
             filteredEvents.map((event) => (
               <Box
+                role="searchItem"
                 key={event.id}
                 borderWidth={1}
                 borderRadius="lg"

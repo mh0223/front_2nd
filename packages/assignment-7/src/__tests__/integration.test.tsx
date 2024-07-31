@@ -99,29 +99,31 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       // 4. 추가된 일정 확인하기
       // expect(screen.getByText("새로운 이벤트")).toBeInTheDocument(); // 달력에도 추가가 되어서 중복이 뜸
       // 4-1) 검색 리스트 확인하기
-      const searchItems = screen.getByRole("searchItems"); // 유저 동작 비슷하게 하기 위해 testId x -> role 추가해서 사용
+      const searchItemsContainer = screen.getByRole("searchItemsContainer"); // 유저 동작 비슷하게 하기 위해 testId x -> role 추가해서 사용
       expect(
-        await within(searchItems).findByText("새로운 이벤트")
+        await within(searchItemsContainer).findByText("새로운 이벤트")
       ).toBeInTheDocument();
 
       expect(
-        await within(searchItems).findByText("2024-07-01 10:00 - 12:00") // 정규식 사용한 예: await within(searchItems).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
+        await within(searchItemsContainer).findByText(
+          "2024-07-01 10:00 - 12:00"
+        ) // 정규식 사용한 예: await within(searchItemsContainer).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
       ).toBeInTheDocument();
 
       expect(
-        await within(searchItems).findByText("설명은 이거입니다~")
+        await within(searchItemsContainer).findByText("설명은 이거입니다~")
       ).toBeInTheDocument();
 
       expect(
-        await within(searchItems).findByText("경기도")
+        await within(searchItemsContainer).findByText("경기도")
       ).toBeInTheDocument();
 
       expect(
-        await within(searchItems).findByText("카테고리: 가족")
+        await within(searchItemsContainer).findByText("카테고리: 가족")
       ).toBeInTheDocument();
 
       expect(
-        await within(searchItems).findByText("알림: 10분 전")
+        await within(searchItemsContainer).findByText("알림: 10분 전")
       ).toBeInTheDocument();
 
       // 4-2) 달력에 새로 추가한 일정 제목 확인
@@ -136,10 +138,18 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const { user } = setupInitItems(<App />);
 
       // 2. 수정할 일정 찾기
-      const searchItems = screen.getByRole("searchItems");
-      const titleElement = await within(searchItems).findByText("팀 회의 msw");
-      const searchItem = titleElement.parentElement?.parentElement
-        ?.parentElement as HTMLElement;
+
+      // 인덱스 사용하지 않고 찾은 방법 (비효율적)
+      // const searchItemsContainer = screen.getByRole("searchItemsContainer");
+      // const titleElement = await within(searchItemsContainer).findByText("팀 회의 msw");
+      // const searchItem = titleElement.parentElement?.parentElement
+      //   ?.parentElement as HTMLElement;
+
+      const searchItems = (await screen.findAllByRole(
+        "searchItem"
+      )) as HTMLElement[];
+
+      const searchItem = searchItems[0]; // 팀 회의 msw
 
       // 3. 수정할 일정의 수정 아이콘 누르기
       const editIcon = await within(searchItem).findByLabelText("Edit event");
@@ -166,7 +176,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const formerEventDate = screen.queryByText("2024-07-20 10:00 - 11:00");
       expect(formerEventDate).not.toBeInTheDocument();
       expect(
-        await within(searchItem).findByText("2024-07-01 10:00 - 12:00") // 정규식 사용한 예: await within(searchItems).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
+        await within(searchItem).findByText("2024-07-01 10:00 - 12:00") // 정규식 사용한 예: await within(searchItemsContainer).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
       ).toBeInTheDocument();
 
       const formerEventDescription = screen.queryByText("주간 팀 미팅");
@@ -208,12 +218,20 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const { user } = setupInitItems(<App />);
 
       // 2. 삭제할 일정 찾기
-      const searchItems = screen.getByRole("searchItems");
-      // const titleElement = await within(searchItems).findByText("팀 회의 msw");
-      const titleElement =
-        await within(searchItems).findByText("점심 약속 msw"); // 앞의 테스트의 렌더링이 그대로 이어져서 이렇게 해야 통과됨,,
-      const searchItem = titleElement.parentElement?.parentElement
-        ?.parentElement as HTMLElement;
+
+      // 인덱스 사용하지 않고 찾은 방법 (비효율적)
+      // const searchItemsContainer = screen.getByRole("searchItemsContainer");
+      // // const titleElement = await within(searchItemsContainer).findByText("팀 회의 msw");
+      // const titleElement =
+      //   await within(searchItemsContainer).findByText("점심 약속 msw"); // 앞의 테스트의 렌더링이 그대로 이어져서 이렇게 해야 통과됨,,
+      // const searchItem = titleElement.parentElement?.parentElement
+      //   ?.parentElement as HTMLElement;
+
+      const searchItems = (await screen.findAllByRole(
+        "searchItem"
+      )) as HTMLElement[];
+
+      const searchItem = searchItems[1]; // 점심 약속 msw
 
       // 3. 삭제할 일정의 삭제 아이콘 누르기
       const deleteIcon =
@@ -247,8 +265,8 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
   // fake timer (어제 실행되어도 오늘 실행되어도 같은 결과 낼 수 있도록 해야함)
   // appear, disappear
-  describe("일정 뷰 및 필터링", () => {
-    test.only("주별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
+  describe.only("일정 뷰 및 필터링", () => {
+    test("주별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
@@ -302,7 +320,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const weekView = screen.getByRole("weekView");
     });
 
-    test.only("월별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
+    test("월별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
