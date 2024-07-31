@@ -4,13 +4,22 @@ import { mockApiHandlers } from "./mockApiHandlers.ts";
 
 const server = setupServer(...mockApiHandlers);
 
-beforeAll(() => {
-  server.listen();
+beforeEach(() => {
+  vi.useFakeTimers({
+    shouldAdvanceTime: true,
+  });
+  vi.setSystemTime(new Date("2024-07-01"));
 });
 
 afterEach(() => {
   server.resetHandlers();
   vi.clearAllMocks();
+  vi.runOnlyPendingTimers();
+  vi.useRealTimers();
+});
+
+beforeAll(() => {
+  server.listen();
 });
 
 afterAll(() => {

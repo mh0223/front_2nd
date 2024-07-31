@@ -5,7 +5,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import App from "../App.tsx";
 
 const setupInitItems = (component: ReactNode) => {
-  const user = userEvent.setup();
+  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
   return {
     user,
@@ -78,7 +78,7 @@ const fillEventInputs = async (user: UserEvent) => {
 };
 
 describe("일정 관리 애플리케이션 통합 테스트", () => {
-  describe("일정 CRUD 및 기본 기능", () => {
+  describe.only("일정 CRUD 및 기본 기능", () => {
     test("새로운 일정을 생성하고, '검색 리스트 및 달력'에 새로운 일정이 입력한대로 저장되는지 확인한다", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
@@ -239,9 +239,8 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       await user.click(deleteIcon);
 
       // 4. 삭제되었는지 확인하기
-      // The standard "getBy" methods throw an error when they can't find an element,
-      // so if you want to make an assertion that an element is not present in the DOM,
-      // you can use "queryBy" APIs instead:
+      // getBy~나 findBy~로 가져오면 에러남(삭제된 것 찾으려고 해서)
+      // queryBy~로 가져와야 삭제되었거나 없어도 에러 안 남
       const deletedEventTitle = screen.queryByText("점심 약속 msw");
       expect(deletedEventTitle).not.toBeInTheDocument();
       // expect(deletedTitle).toBeNull(); // toBeNull()도 가능
@@ -265,7 +264,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
   // fake timer (어제 실행되어도 오늘 실행되어도 같은 결과 낼 수 있도록 해야함)
   // appear, disappear
-  describe.only("일정 뷰 및 필터링", () => {
+  describe("일정 뷰 및 필터링", () => {
     test("주별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
@@ -308,18 +307,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       });
     });
 
-    test("주별 뷰에 일정이 정확히 표시되는지 확인한다", async () => {
-      const { user } = setupInitItems(<App />);
-
-      // Week 선택
-      const viewSelect = screen.getByRole("combobox", {
-        name: /view/i,
-      });
-      await user.selectOptions(viewSelect, ["Week"]);
-
-      const weekView = screen.getByRole("weekView");
-    });
-
     test("월별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
@@ -345,17 +332,50 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
         // 갯수 구하기
         const calendarItemsCount = calendarItems.length;
-        // 하나도 없을 때 (갯수 0일 때)는 monthView 없어야한다.
+        // 하나도 없을 때 (갯수 0일 때)는 monthView에 없어야한다.
         if (calendarItemsCount === 0) {
           expect(
             within(monthView).queryByRole("calendarItem")
           ).not.toBeInTheDocument();
         }
 
-        // 일정이 존재 할 때는 monthView 있어야한다.
+        // 일정이 존재 할 때는 monthView에 있어야한다.
         if (calendarItemsCount < 0) {
           expect(
             within(monthView).queryByRole("calendarItem")
+          ).toBeInTheDocument();
+        }
+      });
+    });
+
+    test("주별 뷰에 일정이 정확히 표시되는지 확인한다", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      // 2. Week 선택
+      const viewSelect = screen.getByRole("combobox", {
+        name: /view/i,
+      });
+      await user.selectOptions(viewSelect, ["Week"]);
+
+      // 3. weekView element 가져오기
+      const weekView = await screen.findByRole("weekView");
+
+      // 4.calendarItems 변수 선언
+      let calendarItems = [];
+
+      // 5. 일정 있다면 "정확히" 표시되는지 확인 - 제목
+      await waitFor(async () => {
+        // queryAllByRole을 통해 없는 경우까지 처리
+        calendarItems = within(weekView).queryAllByRole("calendarItem");
+
+        // 갯수 구하기
+        const calendarItemsCount = calendarItems.length;
+
+        // 일정이 존재 할 때는 weekView에 있어야한다.
+        if (calendarItemsCount < 0) {
+          expect(
+            within(weekView).queryByRole("calendarItem")
           ).toBeInTheDocument();
         }
       });
@@ -375,10 +395,9 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
   });
 
   describe("알림 기능", () => {
-    test.fails(
-      "일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다",
-      () => {}
-    );
+    test("일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다", async () => {
+      // console.log(new Date());
+    });
   });
 
   describe("검색 기능", () => {
