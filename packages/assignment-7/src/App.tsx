@@ -497,6 +497,7 @@ function App() {
                       const isNotified = notifiedEvents.includes(event.id);
                       return (
                         <Box
+                          role="calendarItem"
                           key={event.id}
                           p={1}
                           my={1}
@@ -604,6 +605,7 @@ function App() {
                               );
                               return (
                                 <Box
+                                  role="calendarItem"
                                   key={event.id}
                                   p={1}
                                   my={1}

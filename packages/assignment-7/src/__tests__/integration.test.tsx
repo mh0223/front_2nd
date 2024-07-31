@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 
 import userEvent, { UserEvent } from "@testing-library/user-event";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import App from "../App.tsx";
 
 const setupInitItems = (component: ReactNode) => {
@@ -131,7 +131,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       ).toBeInTheDocument();
     });
 
-    test.only("기존 일정의 세부 정보를 수정하고 변경사항이 정확히 반영되는지 확인한다", async () => {
+    test("기존 일정의 세부 정보를 수정하고 변경사항이 정확히 반영되는지 확인한다", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
@@ -203,7 +203,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       ).toBeInTheDocument();
     });
 
-    test.only("일정을 삭제하고 더 이상 조회되지 않는지 확인한다", async () => {
+    test("일정을 삭제하고 더 이상 조회되지 않는지 확인한다", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
@@ -248,14 +248,119 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
   // fake timer (어제 실행되어도 오늘 실행되어도 같은 결과 낼 수 있도록 해야함)
   // appear, disappear
   describe("일정 뷰 및 필터링", () => {
-    test.fails("주별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.");
-    test.fails("주별 뷰에 일정이 정확히 표시되는지 확인한다");
-    test.fails("월별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.");
-    test.fails("월별 뷰에 일정이 정확히 표시되는지 확인한다");
+    test.only("주별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      // 2. Week 선택
+      const viewSelect = screen.getByRole("combobox", {
+        name: /view/i,
+      });
+      await user.selectOptions(viewSelect, ["Week"]);
+
+      // 3. weekView element 가져오기
+      const weekView = await screen.findByRole("weekView");
+
+      // 4.calendarItems 변수 선언
+      let calendarItems = [];
+
+      // 5. 일정 있는지 없는지 확인후 일정 표시 여부 검증
+      // 비동기적으로 calendarItem이 생성 + 아예 없는 경우 고려
+      // = waitFor + queryAllByRole 사용
+      await waitFor(async () => {
+        // queryAllByRole을 통해 없는 경우까지 처리
+        calendarItems = within(weekView).queryAllByRole("calendarItem");
+
+        // 갯수 구하기
+        const calendarItemsCount = calendarItems.length;
+
+        // 하나도 없을 때 (갯수 0일 때)는 weekView에 없어야한다.
+        if (calendarItemsCount === 0) {
+          expect(
+            within(weekView).queryByRole("calendarItem")
+          ).not.toBeInTheDocument();
+        }
+
+        // 일정이 존재 할 때는 weekView에 있어야한다.
+        if (calendarItemsCount < 0) {
+          expect(
+            within(weekView).queryByRole("calendarItem")
+          ).toBeInTheDocument();
+        }
+      });
+    });
+
+    test("주별 뷰에 일정이 정확히 표시되는지 확인한다", async () => {
+      const { user } = setupInitItems(<App />);
+
+      // Week 선택
+      const viewSelect = screen.getByRole("combobox", {
+        name: /view/i,
+      });
+      await user.selectOptions(viewSelect, ["Week"]);
+
+      const weekView = screen.getByRole("weekView");
+    });
+
+    test.only("월별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      // 2. Month 선택
+      const viewSelect = screen.getByRole("combobox", {
+        name: /view/i,
+      });
+      await user.selectOptions(viewSelect, ["Month"]);
+
+      // 3. monthView element 가져오기
+      const monthView = await screen.findByRole("monthView");
+
+      // 4.calendarItems 변수 선언
+      let calendarItems = [];
+
+      // 5. 일정 있는지 없는지 확인후 일정 표시 여부 검증
+      // 비동기적으로 calendarItem이 생성 + 아예 없는 경우 고려
+      // = waitFor + queryAllByRole 사용
+      await waitFor(async () => {
+        // queryAllByRole을 통해 없는 경우까지 처리
+        calendarItems = within(monthView).queryAllByRole("calendarItem");
+
+        // 갯수 구하기
+        const calendarItemsCount = calendarItems.length;
+        // 하나도 없을 때 (갯수 0일 때)는 monthView 없어야한다.
+        if (calendarItemsCount === 0) {
+          expect(
+            within(monthView).queryByRole("calendarItem")
+          ).not.toBeInTheDocument();
+        }
+
+        // 일정이 존재 할 때는 monthView 있어야한다.
+        if (calendarItemsCount < 0) {
+          expect(
+            within(monthView).queryByRole("calendarItem")
+          ).toBeInTheDocument();
+        }
+      });
+    });
+
+    test("월별 뷰에 일정이 정확히 표시되는지 확인한다", async () => {
+      const { user } = setupInitItems(<App />);
+
+      // Month 선택
+      const viewSelect = screen.getByRole("combobox", {
+        name: /view/i,
+      });
+      await user.selectOptions(viewSelect, ["Month"]);
+
+      const monthView = screen.getByRole("monthView");
+    });
   });
 
   describe("알림 기능", () => {
-    test.fails("일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다");
+    test.fails(
+      "일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다",
+      () => {}
+    );
   });
 
   describe("검색 기능", () => {
