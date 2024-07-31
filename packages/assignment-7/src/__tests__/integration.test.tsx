@@ -157,30 +157,47 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
       // 6. 수정된 일정 확인하기
       // 6-1) 검색 리스트 중 수정한 일정 내용 확인하기
+      const formerEventTitle = screen.queryByText("팀 회의 msw");
+      expect(formerEventTitle).not.toBeInTheDocument();
       expect(
         await within(searchItem).findByText("새로운 이벤트")
       ).toBeInTheDocument();
 
+      const formerEventDate = screen.queryByText("2024-07-20 10:00 - 11:00");
+      expect(formerEventDate).not.toBeInTheDocument();
       expect(
         await within(searchItem).findByText("2024-07-01 10:00 - 12:00") // 정규식 사용한 예: await within(searchItems).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
       ).toBeInTheDocument();
 
+      const formerEventDescription = screen.queryByText("주간 팀 미팅");
+      expect(formerEventDescription).not.toBeInTheDocument();
       expect(
         await within(searchItem).findByText("설명은 이거입니다~")
       ).toBeInTheDocument();
 
+      const formerEventLocation = screen.queryByText("회의실 A");
+      expect(formerEventLocation).not.toBeInTheDocument();
       expect(await within(searchItem).findByText("경기도")).toBeInTheDocument();
 
+      const formerEventCategory = screen.queryByText("카테고리: 업무");
+      expect(formerEventCategory).not.toBeInTheDocument();
       expect(
         await within(searchItem).findByText("카테고리: 가족")
       ).toBeInTheDocument();
 
+      const formerEventAlarm = screen.queryByText("알림: 1분 전");
+      expect(formerEventAlarm).not.toBeInTheDocument();
       expect(
         await within(searchItem).findByText("알림: 10분 전")
       ).toBeInTheDocument();
 
       // 6-2) 달력에 새로 추가한 일정 제목 확인
+
       const calendarItems = screen.getByRole("monthView");
+
+      const formerEventTitleInCalendar =
+        within(calendarItems).queryByText("팀 회의 msw");
+      expect(formerEventTitleInCalendar).not.toBeInTheDocument();
       expect(
         await within(calendarItems).findByText("새로운 이벤트")
       ).toBeInTheDocument();
@@ -194,7 +211,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const searchItems = screen.getByRole("searchItems");
       // const titleElement = await within(searchItems).findByText("팀 회의 msw");
       const titleElement =
-        await within(searchItems).findByText("새로운 이벤트"); // 앞의 테스트의 렌더링이 그대로 이어져서 이렇게 해야 통과됨,,
+        await within(searchItems).findByText("점심 약속 msw"); // 앞의 테스트의 렌더링이 그대로 이어져서 이렇게 해야 통과됨,,
       const searchItem = titleElement.parentElement?.parentElement
         ?.parentElement as HTMLElement;
 
@@ -207,23 +224,23 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       // The standard "getBy" methods throw an error when they can't find an element,
       // so if you want to make an assertion that an element is not present in the DOM,
       // you can use "queryBy" APIs instead:
-      const deletedEventTitle = screen.queryByText("새로운 이벤트");
+      const deletedEventTitle = screen.queryByText("점심 약속 msw");
       expect(deletedEventTitle).not.toBeInTheDocument();
       // expect(deletedTitle).toBeNull(); // toBeNull()도 가능
 
-      const deletedEventDate = screen.queryByText("2024-07-01 10:00 - 12:00");
+      const deletedEventDate = screen.queryByText("2024-07-21 12:30 - 13:30");
       expect(deletedEventDate).not.toBeInTheDocument();
 
-      const deletedEventDescription = screen.queryByText("설명은 이거입니다~");
+      const deletedEventDescription = screen.queryByText("동료와 점심 식사");
       expect(deletedEventDescription).not.toBeInTheDocument();
 
-      const deletedEventLocation = screen.queryByText("경기도");
+      const deletedEventLocation = screen.queryByText("회사 근처 식당");
       expect(deletedEventLocation).not.toBeInTheDocument();
 
-      const deletedEventCategory = screen.queryByText("업무: 가족");
+      const deletedEventCategory = screen.queryByText("업무: 개인");
       expect(deletedEventCategory).not.toBeInTheDocument();
 
-      const deletedEventAlarm = screen.queryByText("알림: 10분 전");
+      const deletedEventAlarm = screen.queryByText("알림: 2시간 전");
       expect(deletedEventAlarm).not.toBeInTheDocument();
     });
   });

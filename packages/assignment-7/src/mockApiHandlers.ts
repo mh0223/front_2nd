@@ -23,7 +23,7 @@ let events = [
     location: "회사 근처 식당",
     category: "개인",
     repeat: { type: "none", interval: 0 },
-    notificationTime: 1,
+    notificationTime: 120,
   },
   {
     id: 3,
@@ -31,7 +31,7 @@ let events = [
     description: "알림 테스트",
     location: "알림 테스트",
     category: "기타",
-    repeat: { type: "weekly", interval: 1 },
+    repeat: { type: "monthly", interval: 1 },
     notificationTime: 60,
     ...(() => {
       const now = new Date();
@@ -88,10 +88,7 @@ export const mockApiHandlers = [
   }),
 
   // 일정 삭제
-  http.delete("/api/events/:id", ({ request, params }) => {
-    // const id = Array.isArray(params.id)
-    //   ? parseInt(params.id[0])
-    //   : parseInt(params.id[0]);
+  http.delete("/api/events/:id", ({ params }) => {
     const id = parseInt(params.id[0]);
     events = events.filter((event) => event.id !== id);
     return new HttpResponse(null, { status: 204 });
