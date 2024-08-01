@@ -481,7 +481,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
     });
   });
 
-  describe.only("공휴일 표시", () => {
+  describe("공휴일 표시", () => {
     test("달력에 1월 1일(신정)이 공휴일로 표시되는지 확인한다", () => {
       // 1. 원래 날짜 저장 및 새로운 날짜 설정
       const originalDate = new Date("2024-07-01");
@@ -514,7 +514,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       // 3. 어린이날 element 가져오기
       const childrensDay = screen.getByText(/어린이날/i);
 
-      screen.debug(childrensDay);
       // 4. 공휴일 스타일이 적용되었는지 확인
       expect(childrensDay).toHaveStyle({
         color: "var(--chakra-colors-red-500)",
@@ -527,9 +526,65 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
   });
 
   describe("일정 충돌 감지", () => {
-    test.fails("겹치는 시간에 새 일정을 추가할 때 경고가 표시되는지 확인한다");
-    test.fails(
-      "기존 일정의 시간을 수정하여 충돌이 발생할 때 경고가 표시되는지 확인한다"
-    );
+    test("겹치는 시간에 새 일정을 추가할 때 경고가 표시되는지 확인한다", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      // 2. 필수 input 모두 채우기
+      await fillEventInputs(user);
+
+      // 3. 일정 추가 버튼 클릭
+      const addEventBtn = screen.getByRole("button", {
+        name: "일정 추가",
+      });
+      await user.click(addEventBtn);
+
+      // 4. 똑같이 채우고
+      await fillEventInputs(user);
+
+      // 5. 일정 추가 버튼 클릭
+      await user.click(addEventBtn);
+
+      expect(await screen.findByText("일정 겹침 경고")).toBeInTheDocument();
+    });
+
+    test("기존 일정의 시간을 수정하여 충돌이 발생할 때 경고가 표시되는지 확인한다", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      const searchItems = (await screen.findAllByRole(
+        "searchItem"
+      )) as HTMLElement[];
+
+      const searchItem = searchItems[1]; // 팀 회의 msw
+
+      // 3. 수정할 일정의 수정 아이콘 누르기
+      const editIcon = await within(searchItem).findByLabelText("Edit event");
+      await user.click(editIcon);
+
+      // 4. 일정 수정하기
+      // 날짜 입력 (date)
+      const dateInput = screen.getByLabelText("날짜");
+      await user.clear(dateInput);
+      await user.type(dateInput, "2024-07-03");
+
+      // 시작 시간 정하기 (time)
+      const startTimeInput = screen.getByLabelText("시작 시간");
+      await user.clear(startTimeInput);
+      await user.type(startTimeInput, "10:00");
+
+      // 종료 시간 정하기 (time)
+      const endTimeInput = screen.getByLabelText("종료 시간");
+      await user.clear(endTimeInput);
+      await user.type(endTimeInput, "11:00");
+
+      // 5. 일정 수정 버튼 클릭
+      const editEventBtn = screen.getByRole("button", {
+        name: "일정 수정",
+      });
+      await user.click(editEventBtn);
+
+      expect(await screen.findByText("일정 겹침 경고")).toBeInTheDocument();
+    });
   });
 });
