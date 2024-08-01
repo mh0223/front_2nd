@@ -48,7 +48,7 @@ export const resetEvents = () => {
 export const mockApiHandlers = [
   // 일정 조회
   http.get("/api/events", () => {
-    return HttpResponse.json(events);
+    return HttpResponse.json(events); //
   }),
 
   // 일정 추가
@@ -59,7 +59,10 @@ export const mockApiHandlers = [
       ...rest,
     };
 
-    events.push(newEvent);
+    events.push(newEvent); // (이렇게 하면 당연히 남을 수 밖에 없음)
+    // 전달되는걸 잘 그려주냐가 중요하지, 뒤에서 어떻게 돌아가고는 그렇게 중요하지 않음
+    // 뒤에서 돌아가고까지 고려 -> 오히려 안좋음
+    // const updatedEvents = [...events, newEvent]
     return HttpResponse.json(newEvent, { status: 201 });
   }),
 
