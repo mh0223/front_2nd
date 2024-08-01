@@ -78,7 +78,7 @@ const fillEventInputs = async (user: UserEvent) => {
 };
 
 describe("일정 관리 애플리케이션 통합 테스트", () => {
-  describe.only("일정 CRUD 및 기본 기능", () => {
+  describe("일정 CRUD 및 기본 기능", () => {
     test("새로운 일정을 생성하고, '검색 리스트 및 달력'에 새로운 일정이 입력한대로 저장되는지 확인한다", async () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
@@ -202,7 +202,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       ).toBeInTheDocument();
 
       // 6-2) 달력에 새로 추가한 일정 제목 확인
-
       const calendarItems = screen.getByRole("monthView");
 
       const formerEventTitleInCalendar =
@@ -218,15 +217,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const { user } = setupInitItems(<App />);
 
       // 2. 삭제할 일정 찾기
-
-      // 인덱스 사용하지 않고 찾은 방법 (비효율적)
-      // const searchItemsContainer = screen.getByRole("searchItemsContainer");
-      // // const titleElement = await within(searchItemsContainer).findByText("팀 회의 msw");
-      // const titleElement =
-      //   await within(searchItemsContainer).findByText("점심 약속 msw"); // 앞의 테스트의 렌더링이 그대로 이어져서 이렇게 해야 통과됨,,
-      // const searchItem = titleElement.parentElement?.parentElement
-      //   ?.parentElement as HTMLElement;
-
       const searchItems = (await screen.findAllByRole(
         "searchItem"
       )) as HTMLElement[];
@@ -262,8 +252,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
     });
   });
 
-  // fake timer (어제 실행되어도 오늘 실행되어도 같은 결과 낼 수 있도록 해야함)
-  // appear, disappear
   describe("일정 뷰 및 필터링", () => {
     test("주별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.", async () => {
       // 1. userEvent 가져오기 및 render
@@ -395,20 +383,147 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
   });
 
   describe("알림 기능", () => {
-    test("일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다", async () => {
-      // console.log(new Date());
-    });
+    test("일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다", async () => {});
   });
 
   describe("검색 기능", () => {
-    test.fails("제목으로 일정을 검색하고 정확한 결과가 반환되는지 확인한다");
-    test.fails("제목으로 일정을 검색하고 정확한 결과가 반환되는지 확인한다");
-    test.fails("검색어를 지우면 모든 일정이 다시 표시되어야 한다");
+    test("제목으로 일정을 검색하고 정확한 결과가 반환되는지 확인한다(제목, 날짜, 설명)", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      // 2. 일정 검색창에 "실리카겔 공연" 입력
+      const searchInput = screen.getByLabelText("일정 검색");
+      await user.type(searchInput, "실리카겔 공연 msw");
+
+      // 3. searchItem이 리스트에 나타나는지 확인
+      const searchItemsContainer = screen.getByRole("searchItemsContainer");
+
+      // 제목
+      expect(
+        await within(searchItemsContainer).findByText("실리카겔 공연 msw")
+      ).toBeInTheDocument();
+
+      // 날짜
+      expect(
+        await within(searchItemsContainer).findByText(
+          "2024-07-27 18:00 - 19:00"
+        )
+      ).toBeInTheDocument();
+
+      // 설명
+      expect(
+        await within(searchItemsContainer).findByText("실리카겔")
+      ).toBeInTheDocument();
+    });
+
+    test("제목으로 일정을 검색하고 정확한 결과가 반환되는지 확인한다(위치, 카테고리, 알림)", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      // 2. 일정 검색창에 "실리카겔 공연" 입력
+      const searchInput = screen.getByLabelText("일정 검색");
+      await user.type(searchInput, "실리카겔 공연 msw");
+
+      // 3. searchItem이 리스트에 나타나는지 확인
+      const searchItemsContainer = screen.getByRole("searchItemsContainer");
+
+      // 위치
+      expect(
+        await within(searchItemsContainer).findByText("잠실")
+      ).toBeInTheDocument();
+
+      // 카테고리
+      expect(
+        await within(searchItemsContainer).findByText("카테고리: 취미")
+      ).toBeInTheDocument();
+
+      // 알림
+      expect(
+        await within(searchItemsContainer).findByText("알림: 2일 전")
+      ).toBeInTheDocument();
+    });
+
+    test("검색어를 지우면 모든 일정이 다시 표시되어야 한다", async () => {
+      // 1. userEvent 가져오기 및 render
+      const { user } = setupInitItems(<App />);
+
+      //2. 검색 전 일정 갯수 확인
+      const searchItems = (await screen.findAllByRole(
+        "searchItem"
+      )) as HTMLElement[];
+
+      const searchItemsCount = searchItems.length;
+
+      // 3. 일정 검색창에 "실리카겔 공연" 입력
+      const searchInput = screen.getByLabelText("일정 검색");
+      await user.type(searchInput, "실리카겔 공연 msw");
+
+      // 4. searchItem이 리스트에 나타나는지 확인
+      const searchItemsContainer = screen.getByRole("searchItemsContainer");
+
+      // 5. 제목으로 나타나는지 확인
+      expect(
+        await within(searchItemsContainer).findByText("실리카겔 공연 msw")
+      ).toBeInTheDocument();
+
+      // 6. 일정 검색창 비우기
+      await user.clear(searchInput);
+
+      // 7. 검색 후 일정 갯수 확인
+      const searchItemsAfterClear = (await screen.findAllByRole(
+        "searchItem"
+      )) as HTMLElement[];
+
+      const searchItemsCountAfterClear = searchItemsAfterClear.length;
+
+      // 8. 검색 전과 후의 일정 갯수 비교
+      expect(searchItemsCountAfterClear).toBe(searchItemsCount);
+    });
   });
 
-  describe("공휴일 표시", () => {
-    test.fails("달력에 1월 1일(신정)이 공휴일로 표시되는지 확인한다");
-    test.fails("달력에 5월 5일(어린이날)이 공휴일로 표시되는지 확인한다");
+  describe.only("공휴일 표시", () => {
+    test("달력에 1월 1일(신정)이 공휴일로 표시되는지 확인한다", () => {
+      // 1. 원래 날짜 저장 및 새로운 날짜 설정
+      const originalDate = new Date("2024-07-01");
+      vi.setSystemTime(new Date("2024-01-01"));
+
+      // 2. userEvent 가져오기 및 render
+      setupInitItems(<App />);
+
+      // 3. 신정 element 가져오기
+      const firstDayOfYear = screen.getByText(/신정/i);
+
+      // 4. 공휴일 스타일이 적용되었는지 확인
+      expect(firstDayOfYear).toHaveStyle({
+        color: "var(--chakra-colors-red-500)",
+        fontSize: "var(--chakra-fontSizes-sm)",
+      });
+
+      // 5. 테스트가 끝난 후 원래 날짜로 복원
+      vi.setSystemTime(originalDate);
+    });
+
+    test("달력에 5월 5일(어린이날)이 공휴일로 표시되는지 확인한다", () => {
+      // 1. 원래 날짜 저장 및 새로운 날짜 설정
+      const originalDate = new Date("2024-07-01");
+      vi.setSystemTime(new Date("2024-05-01"));
+
+      // 2. userEvent 가져오기 및 render
+      setupInitItems(<App />);
+
+      // 3. 어린이날 element 가져오기
+      const childrensDay = screen.getByText(/어린이날/i);
+
+      screen.debug(childrensDay);
+      // 4. 공휴일 스타일이 적용되었는지 확인
+      expect(childrensDay).toHaveStyle({
+        color: "var(--chakra-colors-red-500)",
+        fontSize: "var(--chakra-fontSizes-sm)",
+      });
+
+      // 5. 테스트가 끝난 후 원래 날짜로 복원
+      vi.setSystemTime(originalDate);
+    });
   });
 
   describe("일정 충돌 감지", () => {
