@@ -58,15 +58,15 @@ const fillEventInputs = async (user: UserEvent) => {
 
   // 날짜 입력 (date)
   const dateInput = screen.getByLabelText("날짜");
-  await user.type(dateInput, "2024-07-01");
+  await user.type(dateInput, "2024-07-02");
 
   // 시작 시간 정하기 (time)
   const startTimeInput = screen.getByLabelText("시작 시간");
-  await user.type(startTimeInput, "10:00");
+  await user.type(startTimeInput, "13:00");
 
   // 종료 시간 정하기 (time)
   const endTimeInput = screen.getByLabelText("종료 시간");
-  await user.type(endTimeInput, "12:00");
+  await user.type(endTimeInput, "15:00");
 
   // 설명 입력 (text)
   const descriptionInput = screen.getByLabelText("설명");
@@ -112,7 +112,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
       expect(
         await within(searchItemsContainer).findByText(
-          "2024-07-01 10:00 - 12:00"
+          "2024-07-02 13:00 - 15:00"
         ) // 정규식 사용한 예: await within(searchItemsContainer).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
       ).toBeInTheDocument();
 
@@ -179,10 +179,10 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
         await within(searchItem).findByText("새로운 이벤트")
       ).toBeInTheDocument();
 
-      const formerEventDate = screen.queryByText("2024-07-20 10:00 - 11:00");
+      const formerEventDate = screen.queryByText("2024-07-03 10:00 - 11:00");
       expect(formerEventDate).not.toBeInTheDocument();
       expect(
-        await within(searchItem).findByText("2024-07-01 10:00 - 12:00") // 정규식 사용한 예: await within(searchItemsContainer).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
+        await within(searchItem).findByText("2024-07-02 13:00 - 15:00") // 정규식 사용한 예: await within(searchItemsContainer).findByText(/10:00\s*-\s*12:00/) // \s*: 공백 문자가 0개 이상 있는지 확인하는 패턴
       ).toBeInTheDocument();
 
       const formerEventDescription = screen.queryByText("주간 팀 미팅");
@@ -395,16 +395,34 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
     });
   });
 
-  describe.only("알림 기능", () => {
+  describe("알림 기능", () => {
     test("일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다", async () => {
-      console.log(new Date());
-      // 1. userEvent 가져오기 및 render
-      setupInitItems(<App />);
+      // 1. 원래 날짜 저장 및 새로운 날짜 설정
+      const originalDate = new Date("2024-07-01");
+      vi.setSystemTime(new Date("2024-07-02 12:50:00"));
 
-      await waitFor(() => {
-        const alert = screen.queryByRole("alert");
-        expect(alert).toBeInTheDocument();
+      console.log(new Date());
+      const { user } = setupInitItems(<App />);
+
+      // 2. 새로운 일정 추가 (10분 전 알림)
+      await fillEventInputs(user);
+
+      // 3. 일정 추가 버튼 클릭
+      const addEventBtn = screen.getByRole("button", {
+        name: "일정 추가",
       });
+      await user.click(addEventBtn);
+
+      // 알림을 기다리기 위해 waitFor 사용
+      await waitFor(
+        () => {
+          const alert = screen.getByText(/10분 후.*새로운 이벤트.*시작됩니다/);
+          expect(alert).toBeVisible();
+        },
+        { timeout: 5000 }
+      ); // 타임아웃을 5초로 설정
+
+      vi.setSystemTime(originalDate);
     });
   });
 

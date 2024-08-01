@@ -37,30 +37,6 @@ let initialEvents = [
     repeat: { type: "weekly", interval: 1 },
     notificationTime: 2880,
   },
-  {
-    id: 4,
-    title: "1일 전 알림 테스트 msw",
-    date: "2024-07-02",
-    startTime: "13:00",
-    endTime: "13:30",
-    description: "알림 테스트 설명",
-    location: "집",
-    category: "기타",
-    repeat: { type: "weekly", interval: 1 },
-    notificationTime: 1440,
-  },
-  {
-    id: 5,
-    title: "1일 전 알림 테스트 msw",
-    date: "2024-08-02",
-    startTime: "13:00",
-    endTime: "13:30",
-    description: "알림 테스트 설명",
-    location: "집",
-    category: "기타",
-    repeat: { type: "weekly", interval: 1 },
-    notificationTime: 1440,
-  },
 ];
 
 let events = [...initialEvents];
