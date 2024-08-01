@@ -1,7 +1,13 @@
 import { ReactNode } from "react";
 
 import userEvent, { UserEvent } from "@testing-library/user-event";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import {
+  findByRole,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import App from "../App.tsx";
 
 const setupInitItems = (component: ReactNode) => {
@@ -312,8 +318,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       let calendarItems = [];
 
       // 5. 일정 있는지 없는지 확인후 일정 표시 여부 검증
-      // 비동기적으로 calendarItem이 생성 + 아예 없는 경우 고려
-      // = waitFor + queryAllByRole 사용
       await waitFor(async () => {
         // queryAllByRole을 통해 없는 경우까지 처리
         calendarItems = within(monthView).queryAllByRole("calendarItem");
@@ -340,50 +344,68 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
-      // 2. Week 선택
+      // 2. Week view 선택
       const viewSelect = screen.getByRole("combobox", {
         name: /view/i,
       });
       await user.selectOptions(viewSelect, ["Week"]);
 
-      // 3. weekView element 가져오기
+      // 3. weekly 달력 element
       const weekView = await screen.findByRole("weekView");
 
-      // 4.calendarItems 변수 선언
-      let calendarItems = [];
+      // 4. 달력 내 일정 제목 element 모두 가져오기
+      const itemTitles = (await within(weekView).findAllByRole(
+        "itemTitle"
+      )) as HTMLElement[];
 
-      // 5. 일정 있다면 "정확히" 표시되는지 확인 - 제목
-      await waitFor(async () => {
-        // queryAllByRole을 통해 없는 경우까지 처리
-        calendarItems = within(weekView).queryAllByRole("calendarItem");
-
-        // 갯수 구하기
-        const calendarItemsCount = calendarItems.length;
-
-        // 일정이 존재 할 때는 weekView에 있어야한다.
-        if (calendarItemsCount < 0) {
-          expect(
-            within(weekView).queryByRole("calendarItem")
-          ).toBeInTheDocument();
-        }
-      });
+      // 5. 해당 주에 해당하는 모든 일정 있는지 확인
+      const itemTitleContents = itemTitles.map((title) => title.textContent);
+      expect(itemTitleContents).toEqual(
+        expect.arrayContaining(["팀 회의 msw"])
+      );
     });
 
     test("월별 뷰에 일정이 정확히 표시되는지 확인한다", async () => {
+      // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
-      // Month 선택
+      // 2. Month view 선택
       const viewSelect = screen.getByRole("combobox", {
         name: /view/i,
       });
       await user.selectOptions(viewSelect, ["Month"]);
 
+      // 3. monthly 달력 element
       const monthView = screen.getByRole("monthView");
+
+      // 4. 달력 내 일정 제목 element 모두 가져오기
+      const itemTitles = (await within(monthView).findAllByRole(
+        "itemTitle"
+      )) as HTMLElement[];
+
+      // 5. 해당 월에 해당하는 모든 일정 있는지 확인
+      const itemTitleContents = itemTitles.map((title) => title.textContent);
+      expect(itemTitleContents).toEqual(
+        expect.arrayContaining([
+          "팀 회의 msw",
+          "점심 약속 msw",
+          "실리카겔 공연 msw",
+        ])
+      );
     });
   });
 
-  describe("알림 기능", () => {
-    test("일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다", async () => {});
+  describe.only("알림 기능", () => {
+    test("일정 알림을 설정하고 지정된 시간에 알림이 발생하는지 확인한다", async () => {
+      console.log(new Date());
+      // 1. userEvent 가져오기 및 render
+      setupInitItems(<App />);
+
+      await waitFor(() => {
+        const alert = screen.queryByRole("alert");
+        expect(alert).toBeInTheDocument();
+      });
+    });
   });
 
   describe("검색 기능", () => {
@@ -391,7 +413,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
-      // 2. 일정 검색창에 "실리카겔 공연" 입력
+      // 2. 일정 검색창에 "실리카겔 공연 msw" 입력
       const searchInput = screen.getByLabelText("일정 검색");
       await user.type(searchInput, "실리카겔 공연 msw");
 
@@ -447,37 +469,42 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       // 1. userEvent 가져오기 및 render
       const { user } = setupInitItems(<App />);
 
-      //2. 검색 전 일정 갯수 확인
+      // 2. 일정 검색창에 "실리카겔 공연" 입력
+      const searchInput = screen.getByLabelText("일정 검색");
+      await user.type(searchInput, "실리카겔 공연 msw");
+
+      // 3. 검색한 것만 나타나는지 확인
       const searchItems = (await screen.findAllByRole(
         "searchItem"
       )) as HTMLElement[];
 
-      const searchItemsCount = searchItems.length;
+      const searchedItemContents = searchItems.map(
+        (content) => content.textContent
+      );
+      expect(searchedItemContents).toEqual(
+        expect.arrayContaining([
+          "실리카겔 공연 msw2024-07-27 18:00 - 19:00실리카겔잠실카테고리: 취미반복: 1주마다알림: 2일 전",
+        ])
+      );
 
-      // 3. 일정 검색창에 "실리카겔 공연" 입력
-      const searchInput = screen.getByLabelText("일정 검색");
-      await user.type(searchInput, "실리카겔 공연 msw");
-
-      // 4. searchItem이 리스트에 나타나는지 확인
-      const searchItemsContainer = screen.getByRole("searchItemsContainer");
-
-      // 5. 제목으로 나타나는지 확인
-      expect(
-        await within(searchItemsContainer).findByText("실리카겔 공연 msw")
-      ).toBeInTheDocument();
-
-      // 6. 일정 검색창 비우기
+      // 4. 일정 검색창 비우기
       await user.clear(searchInput);
 
-      // 7. 검색 후 일정 갯수 확인
-      const searchItemsAfterClear = (await screen.findAllByRole(
+      // 5. 모든 일정 다시 표시되는지 확인
+      const afterSearchItems = (await screen.findAllByRole(
         "searchItem"
       )) as HTMLElement[];
 
-      const searchItemsCountAfterClear = searchItemsAfterClear.length;
-
-      // 8. 검색 전과 후의 일정 갯수 비교
-      expect(searchItemsCountAfterClear).toBe(searchItemsCount);
+      const allItemContents = afterSearchItems.map(
+        (content) => content.textContent
+      );
+      expect(allItemContents).toEqual(
+        expect.arrayContaining([
+          "팀 회의 msw2024-07-03 10:00 - 11:00주간 팀 미팅회의실 A카테고리: 업무반복: 1주마다알림: 1분 전",
+          "점심 약속 msw2024-07-21 12:30 - 13:30동료와 점심 식사회사 근처 식당카테고리: 개인알림: 2시간 전",
+          "실리카겔 공연 msw2024-07-27 18:00 - 19:00실리카겔잠실카테고리: 취미반복: 1주마다알림: 2일 전",
+        ])
+      );
     });
   });
 

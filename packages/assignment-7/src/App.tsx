@@ -509,7 +509,7 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
-                            <Text fontSize="sm" noOfLines={1}>
+                            <Text role="itemTitle" fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
                           </HStack>
@@ -617,7 +617,11 @@ function App() {
                                 >
                                   <HStack spacing={1}>
                                     {isNotified && <BellIcon />}
-                                    <Text fontSize="sm" noOfLines={1}>
+                                    <Text
+                                      role="itemTitle"
+                                      fontSize="sm"
+                                      noOfLines={1}
+                                    >
                                       {event.title}
                                     </Text>
                                   </HStack>
