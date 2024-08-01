@@ -50,7 +50,8 @@ jobs:
           node-version: "20.x"
 
       - name: Install Node.js dependencies
-        run: npm install
+
+        run: npm install --legacy-peer-deps
         working-directory: packages/assignment-6
 
       - name: Run Eslint
@@ -87,14 +88,18 @@ jobs:
           node-version: "20.x"
 
       - name: Install Node.js dependencies
-        run: npm install
+
+        run: npm install --legacy-peer-deps
+
         working-directory: packages/assignment-6
 
       - name: Run Test
         id: test
         run: npm run test
         working-directory: packages/assignment-6
+
         continue-on-error: true
+
 
       - name: Run Coverage
         id: coverage
@@ -169,7 +174,9 @@ jobs:
           node-version: "20.x"
 
       - name: Install Node.js dependencies
-        run: npm install
+
+        run: npm install --legacy-peer-deps
+
         working-directory: packages/assignment-6
 
       - name: Run Lighthouse CI
@@ -259,17 +266,19 @@ jobs:
             const reviewerGithub = myTeammates[randomIndex].github;
 
             const comment = `
-            ## @${reviewerGithub} ${reviewerName} 당첨~~!
+
+            ## @${reviewerGithub} ${reviewerName}님 당첨~~!
             `;
 
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: comment
              })
 
-            github.rest.pulls.requestReviewers({
+
+            await github.rest.pulls.requestReviewers({
               pull_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
