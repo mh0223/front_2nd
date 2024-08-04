@@ -37,6 +37,39 @@ let initialEvents = [
     repeat: { type: "weekly", interval: 1 },
     notificationTime: 2880,
   },
+  {
+    id: 4,
+    title: "알림 테스트 msw",
+    description: "알림 테스트",
+    location: "알림 테스트",
+    category: "개인",
+    repeat: { type: "weekly", interval: 1 },
+    notificationTime: 10,
+    ...(() => {
+      const now = new Date();
+      const startTime = new Date(now.getTime() + 5 * 60000); // 5분 후
+      const endTime = new Date(startTime.getTime() + 60 * 60000); // 시작시간으로부터 1시간 후
+
+      const formatDate = (date: Date) => {
+        return date.toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" });
+      };
+
+      const formatTime = (date: Date) => {
+        return date.toLocaleTimeString("en-GB", {
+          timeZone: "Asia/Seoul",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      };
+
+      return {
+        date: formatDate(now),
+        startTime: formatTime(startTime),
+        endTime: formatTime(endTime),
+      };
+    })(),
+  },
 ];
 
 let events = [...initialEvents];
