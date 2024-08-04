@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { Event } from "./types";
+import { Event } from "../types";
 let initialEvents = [
   {
     id: 1,

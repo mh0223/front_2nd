@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
 import { setupServer } from "msw/node";
-import { mockApiHandlers, resetEvents } from "./mockApiHandlers.ts";
+import { mockApiHandlers, resetEvents } from "./mocks/mockApiHandlers.ts";
+import { currentDateStore } from "./store/currentDateStore.ts";
 
 const server = setupServer(...mockApiHandlers);
 
@@ -12,6 +13,7 @@ beforeEach(() => {
   // vi.restoreAllMocks();
   // vi.resetModules();
   resetEvents(); // 각 테스트마다 events 배열 초기화
+  currentDateStore.getState().initializeForTest(new Date("2024-07-01"));
 });
 
 afterEach(() => {
@@ -21,15 +23,15 @@ afterEach(() => {
 // ~All - 처음 한 번 실행
 beforeAll(() => {
   server.listen();
-  vi.useFakeTimers({
-    shouldAdvanceTime: true,
-  });
-  vi.setSystemTime(new Date("2024-07-01"));
+  // vi.useFakeTimers({
+  //   shouldAdvanceTime: true,
+  // });
+  // vi.setSystemTime(new Date("2024-07-01"));
 });
 
 afterAll(() => {
-  vi.runOnlyPendingTimers();
-  vi.useRealTimers();
+  // vi.runOnlyPendingTimers();
+  // vi.useRealTimers();
 
   server.close();
 });

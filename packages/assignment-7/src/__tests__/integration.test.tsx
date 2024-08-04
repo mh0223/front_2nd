@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-
 import userEvent, { UserEvent } from "@testing-library/user-event";
 import {
   findByRole,
@@ -9,10 +8,11 @@ import {
   within,
 } from "@testing-library/react";
 import App from "../App.tsx";
+import { currentDateStore } from "../store/currentDateStore.ts";
 
 const setupInitItems = (component: ReactNode) => {
-  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-
+  // const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  const user = userEvent.setup();
   return {
     user,
     ...render(component),
@@ -401,7 +401,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const originalDate = new Date("2024-07-01");
       vi.setSystemTime(new Date("2024-07-02 12:50:00"));
 
-      console.log(new Date());
       const { user } = setupInitItems(<App />);
 
       // 2. 새로운 일정 추가 (10분 전 알림)
@@ -433,6 +432,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
       // 2. 일정 검색창에 "실리카겔 공연 msw" 입력
       const searchInput = screen.getByLabelText("일정 검색");
+      await user.clear(searchInput);
       await user.type(searchInput, "실리카겔 공연 msw");
 
       // 3. searchItem이 리스트에 나타나는지 확인
@@ -462,6 +462,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
       // 2. 일정 검색창에 "실리카겔 공연" 입력
       const searchInput = screen.getByLabelText("일정 검색");
+      await user.clear(searchInput);
       await user.type(searchInput, "실리카겔 공연 msw");
 
       // 3. searchItem이 리스트에 나타나는지 확인
@@ -489,6 +490,7 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
       // 2. 일정 검색창에 "실리카겔 공연" 입력
       const searchInput = screen.getByLabelText("일정 검색");
+      await user.clear(searchInput);
       await user.type(searchInput, "실리카겔 공연 msw");
 
       // 3. 검색한 것만 나타나는지 확인
@@ -528,9 +530,8 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
 
   describe("공휴일 표시", () => {
     test("달력에 1월 1일(신정)이 공휴일로 표시되는지 확인한다", () => {
-      // 1. 원래 날짜 저장 및 새로운 날짜 설정
-      const originalDate = new Date("2024-07-01");
-      vi.setSystemTime(new Date("2024-01-01"));
+      // 1. 새로운 날짜 설정
+      currentDateStore.getState().initializeForTest(new Date("2024-01-01"));
 
       // 2. userEvent 가져오기 및 render
       setupInitItems(<App />);
@@ -543,16 +544,11 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
         color: "var(--chakra-colors-red-500)",
         fontSize: "var(--chakra-fontSizes-sm)",
       });
-
-      // 5. 테스트가 끝난 후 원래 날짜로 복원
-      vi.setSystemTime(originalDate);
     });
 
     test("달력에 5월 5일(어린이날)이 공휴일로 표시되는지 확인한다", () => {
-      // 1. 원래 날짜 저장 및 새로운 날짜 설정
-      const originalDate = new Date("2024-07-01");
-      vi.setSystemTime(new Date("2024-05-01"));
-
+      // 1. 새로운 날짜 설정
+      currentDateStore.getState().initializeForTest(new Date("2024-05-05"));
       // 2. userEvent 가져오기 및 render
       setupInitItems(<App />);
 
@@ -564,9 +560,6 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
         color: "var(--chakra-colors-red-500)",
         fontSize: "var(--chakra-fontSizes-sm)",
       });
-
-      // 5. 테스트가 끝난 후 원래 날짜로 복원
-      vi.setSystemTime(originalDate);
     });
   });
 
