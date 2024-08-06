@@ -70,6 +70,46 @@ export const Canlendar = ({
     };
   };
 
+  const getRepeatingEvents = (
+    event: Event,
+    startDate: Date,
+    endDate: Date
+  ): Event[] => {
+    const repeatingEvents: Event[] = [];
+    let eventDate = new Date(event.date);
+
+    while (eventDate <= endDate) {
+      if (eventDate >= startDate) {
+        repeatingEvents.push({
+          ...event,
+          id: events.length + repeatingEvents.length + 1,
+          date: new Date(eventDate).toISOString().split("T")[0],
+        });
+      }
+
+      switch (event.repeat.type) {
+        case "daily":
+          eventDate.setDate(eventDate.getDate() + event.repeat.interval);
+          break;
+        case "weekly":
+          eventDate.setDate(eventDate.getDate() + 7 * event.repeat.interval);
+          break;
+        case "monthly":
+          eventDate.setMonth(eventDate.getMonth() + event.repeat.interval);
+          break;
+        case "yearly":
+          eventDate.setFullYear(
+            eventDate.getFullYear() + event.repeat.interval
+          );
+          break;
+        default:
+          return repeatingEvents;
+      }
+    }
+
+    return repeatingEvents;
+  };
+
   const navigate = (direction: "prev" | "next") => {
     setCurrentDate((prevDate) => {
       const newDate = new Date(prevDate);
@@ -127,6 +167,12 @@ export const Canlendar = ({
     }
   }, [events]);
 
+  const eachViewProps = {
+    filteredEvents,
+    getRepeatingEvents,
+    holidays,
+  };
+
   return (
     <>
       <VStack flex={1} spacing={5} align="stretch">
@@ -153,28 +199,38 @@ export const Canlendar = ({
           />
         </HStack>
 
-        {view === "week" && (
-          <WeekView filteredEvents={filteredEvents} holidays={holidays} />
-        )}
-        {view === "month" && (
-          <MonthView filteredEvents={filteredEvents} holidays={holidays} />
-        )}
+        {view === "week" && <WeekView {...eachViewProps} />}
+        {view === "month" && <MonthView {...eachViewProps} />}
       </VStack>
       {notifications.length > 0 && <AlertNotificationToast />}
     </>
   );
 };
 
-type WeekViewProps = {
+type EachViewProps = {
   filteredEvents: Event[];
+  getRepeatingEvents: (event: Event, startDate: Date, endDate: Date) => Event[];
   holidays: { [key: string]: string };
 };
 
-const WeekView = ({ filteredEvents, holidays }: WeekViewProps) => {
+const WeekView = ({
+  filteredEvents,
+  getRepeatingEvents,
+  holidays,
+}: EachViewProps) => {
   const { currentDate } = currentDateStore();
   const { notifiedEvents } = eventsStore();
 
   const weekDates = getWeekDates(currentDate);
+  const weekStart = weekDates[0];
+  const weekEnd = weekDates[6];
+
+  const allEvents = filteredEvents.flatMap((event) =>
+    event.repeat.type === "none"
+      ? [event]
+      : getRepeatingEvents(event, weekStart, weekEnd)
+  );
+
   return (
     <VStack
       role="weekView"
@@ -204,11 +260,9 @@ const WeekView = ({ filteredEvents, holidays }: WeekViewProps) => {
                 width="14.28%"
               >
                 <Text fontWeight="bold">{date.getDate()}</Text>
-                {filteredEvents
+                {allEvents
                   .filter(
-                    (event) =>
-                      new Date(event.date).toDateString() ===
-                      date.toDateString()
+                    (event) => event.date === date.toISOString().split("T")[0]
                   )
                   .map((event) => {
                     const isNotified = notifiedEvents.includes(event.id);
@@ -241,12 +295,11 @@ const WeekView = ({ filteredEvents, holidays }: WeekViewProps) => {
   );
 };
 
-type MonthViewProps = {
-  filteredEvents: Event[];
-  holidays: { [key: string]: string };
-};
-
-const MonthView = ({ filteredEvents, holidays }: MonthViewProps) => {
+const MonthView = ({
+  filteredEvents,
+  getRepeatingEvents,
+  holidays,
+}: EachViewProps) => {
   const { currentDate } = currentDateStore();
   const { notifiedEvents } = eventsStore();
 
@@ -275,6 +328,27 @@ const MonthView = ({ filteredEvents, holidays }: MonthViewProps) => {
       week = Array(7).fill(null);
     }
   }
+
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    week[i] = null;
+  }
+
+  const monthStart = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    1
+  );
+  const monthEnd = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    daysInMonth
+  );
+
+  const allEvents = filteredEvents.flatMap((event) =>
+    event.repeat.type === "none"
+      ? [event]
+      : getRepeatingEvents(event, monthStart, monthEnd)
+  );
 
   return (
     <VStack
@@ -320,7 +394,7 @@ const MonthView = ({ filteredEvents, holidays }: MonthViewProps) => {
                             {holiday}
                           </Text>
                         )}
-                        {filteredEvents
+                        {allEvents
                           .filter(
                             (event) => new Date(event.date).getDate() === day
                           )

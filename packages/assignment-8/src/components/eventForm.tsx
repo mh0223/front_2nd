@@ -18,7 +18,6 @@ import { CATEGORIES, NOTIFICATION_OPTIONS } from "../const";
 import { eventsStore } from "../store/eventsStore";
 import { AlertMessageToast } from "./alertMessageToast";
 import { useToasts } from "../hooks/useToasts.tsx";
-import { notificationsStore } from "../store/notificationsStore.ts";
 
 export const EventForm = () => {
   const [title, setTitle] = useState("");
@@ -53,7 +52,6 @@ export const EventForm = () => {
     setOverlappingEvents,
   } = eventsStore();
 
-  const { setNotifications } = notificationsStore();
   const eventData: Event = {
     id: editingEvent ? editingEvent.id : Date.now(),
     title,
@@ -336,8 +334,11 @@ export const EventForm = () => {
         <FormControl>
           <FormLabel>반복 설정</FormLabel>
           <Checkbox
+            role="repeatCheckbox"
             isChecked={isRepeating}
-            onChange={(e) => setIsRepeating(e.target.checked)}
+            onChange={(e) => {
+              setIsRepeating(e.target.checked);
+            }}
           >
             반복 일정
           </Checkbox>

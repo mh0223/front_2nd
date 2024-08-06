@@ -22,6 +22,7 @@ export const useView = () => {
     );
   };
 
+  // searchTerm에 따라 filter 됨
   const filteredEvents = (() => {
     const filtered = searchEvents(searchTerm);
     return filtered.filter((event) => {

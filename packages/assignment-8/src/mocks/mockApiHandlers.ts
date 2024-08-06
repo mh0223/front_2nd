@@ -44,7 +44,7 @@ let initialEvents = [
     startTime: "19:00",
     endTime: "21:00",
     description: "work shit sleep",
-    location: "무신사 갤러리",
+    location: "무신사 개러지",
     category: "취미",
     repeat: { type: "weekly", interval: 1 },
     notificationTime: 2880,
