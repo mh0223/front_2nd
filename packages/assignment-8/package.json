@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "node server.js",
-    "server:watch": "node --watch server.js",
+    "server:watch": "nodemon server.js",
     "start": "vite",
     "dev": "concurrently \"pnpm run server:watch\" \"pnpm run start\"",
     "test": "vitest",
@@ -41,6 +41,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "nodemon": "^3.1.4",
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
     "vitest": "^2.0.2"
