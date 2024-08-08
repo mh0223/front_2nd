@@ -1,12 +1,6 @@
 import { ReactNode } from "react";
 import userEvent, { UserEvent } from "@testing-library/user-event";
-import {
-  findByRole,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import App from "../App.tsx";
 import { currentDateStore } from "../store/currentDateStore.ts";
 
@@ -230,8 +224,9 @@ describe("일정 관리 애플리케이션 통합 테스트", () => {
       const searchItem = searchItems[1]; // 점심 약속 msw
 
       // 3. 삭제할 일정의 삭제 아이콘 누르기
-      const deleteIcon =
-        await within(searchItem).findByLabelText("Delete event");
+      const deleteIcon = await within(searchItem).findByLabelText(
+        "Delete event"
+      );
       await user.click(deleteIcon);
 
       // 4. 삭제되었는지 확인하기

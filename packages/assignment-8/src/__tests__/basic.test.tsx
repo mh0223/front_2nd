@@ -1,12 +1,6 @@
 import { ReactNode } from "react";
 import userEvent, { UserEvent } from "@testing-library/user-event";
-import {
-  findByRole,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import App from "../App.tsx";
 
 const setupInitItems = (component: ReactNode) => {

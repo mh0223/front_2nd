@@ -213,11 +213,7 @@ type EachViewProps = {
   holidays: { [key: string]: string };
 };
 
-const WeekView = ({
-  filteredEvents,
-  getRepeatingEvents,
-  holidays,
-}: EachViewProps) => {
+const WeekView = ({ filteredEvents, getRepeatingEvents }: EachViewProps) => {
   const { currentDate } = currentDateStore();
   const { notifiedEvents } = eventsStore();
 
@@ -374,7 +370,9 @@ const MonthView = ({
             <Tr key={weekIndex}>
               {week.map((day, dayIndex) => {
                 const dateString = day
-                  ? `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                  ? `${currentDate.getFullYear()}-${String(
+                      currentDate.getMonth() + 1
+                    ).padStart(2, "0")}-${String(day).padStart(2, "0")}`
                   : "";
                 const holiday = holidays[dateString];
 

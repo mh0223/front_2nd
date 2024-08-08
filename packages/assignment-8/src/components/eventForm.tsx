@@ -181,8 +181,9 @@ export const EventForm = () => {
   };
 
   const handleUpdateEvent = async (eventData: Event) => {
+    let result;
+
     try {
-      let result;
       if (editingEvent) {
         result = await updateEvent(eventData);
       } else {
@@ -253,12 +254,17 @@ export const EventForm = () => {
 
         <FormControl>
           <FormLabel>제목</FormLabel>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input
+            data-cy="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </FormControl>
 
         <FormControl>
           <FormLabel>날짜</FormLabel>
           <Input
+            data-cy="date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -274,6 +280,7 @@ export const EventForm = () => {
               placement="top"
             >
               <Input
+                data-cy="time"
                 type="time"
                 value={startTime}
                 onChange={handleStartTimeChange}
@@ -290,6 +297,7 @@ export const EventForm = () => {
               placement="top"
             >
               <Input
+                data-cy="time"
                 type="time"
                 value={endTime}
                 onChange={handleEndTimeChange}
@@ -303,6 +311,7 @@ export const EventForm = () => {
         <FormControl>
           <FormLabel>설명</FormLabel>
           <Input
+            data-cy="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -311,6 +320,7 @@ export const EventForm = () => {
         <FormControl>
           <FormLabel>위치</FormLabel>
           <Input
+            data-cy="location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
@@ -319,6 +329,7 @@ export const EventForm = () => {
         <FormControl>
           <FormLabel>카테고리</FormLabel>
           <Select
+            data-cy="category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
@@ -334,6 +345,7 @@ export const EventForm = () => {
         <FormControl>
           <FormLabel>반복 설정</FormLabel>
           <Checkbox
+            data-cy="repeat-check"
             role="repeatCheckbox"
             isChecked={isRepeating}
             onChange={(e) => {
@@ -347,6 +359,7 @@ export const EventForm = () => {
         <FormControl>
           <FormLabel>알림 설정</FormLabel>
           <Select
+            data-cy="notification-time"
             value={notificationTime}
             onChange={(e) => setNotificationTime(Number(e.target.value))}
           >
@@ -363,6 +376,7 @@ export const EventForm = () => {
             <FormControl>
               <FormLabel>반복 유형</FormLabel>
               <Select
+                data-cy="repeat-type"
                 value={repeatType}
                 onChange={(e) => setRepeatType(e.target.value as RepeatType)}
               >
@@ -376,6 +390,7 @@ export const EventForm = () => {
               <FormControl>
                 <FormLabel>반복 간격</FormLabel>
                 <Input
+                  data-cy="repeat-interval"
                   type="number"
                   value={repeatInterval}
                   onChange={(e) => setRepeatInterval(Number(e.target.value))}
@@ -385,6 +400,7 @@ export const EventForm = () => {
               <FormControl>
                 <FormLabel>반복 종료일</FormLabel>
                 <Input
+                  data-cy="repeat-end-date"
                   type="date"
                   value={repeatEndDate}
                   onChange={(e) => setRepeatEndDate(e.target.value)}

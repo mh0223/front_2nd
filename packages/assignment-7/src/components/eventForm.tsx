@@ -18,7 +18,6 @@ import { CATEGORIES, NOTIFICATION_OPTIONS } from "../const";
 import { eventsStore } from "../store/eventsStore";
 import { AlertMessageToast } from "./alertMessageToast";
 import { useToasts } from "../hooks/useToasts.tsx";
-import { notificationsStore } from "../store/notificationsStore.ts";
 
 export const EventForm = () => {
   const [title, setTitle] = useState("");
@@ -53,7 +52,6 @@ export const EventForm = () => {
     setOverlappingEvents,
   } = eventsStore();
 
-  const { setNotifications } = notificationsStore();
   const eventData: Event = {
     id: editingEvent ? editingEvent.id : Date.now(),
     title,
@@ -183,8 +181,8 @@ export const EventForm = () => {
   };
 
   const handleUpdateEvent = async (eventData: Event) => {
+    let result;
     try {
-      let result;
       if (editingEvent) {
         result = await updateEvent(eventData);
       } else {

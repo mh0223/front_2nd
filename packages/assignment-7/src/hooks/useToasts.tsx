@@ -1,9 +1,6 @@
 import { UseToastOptions } from "@chakra-ui/react";
-import { eventsStore } from "../store/eventsStore";
 
 export const useToasts = () => {
-  const { editingEvent } = eventsStore();
-
   const getToastOptions = (type: string): UseToastOptions => {
     const options: Record<string, UseToastOptions> = {
       updatingEventSuccess: {

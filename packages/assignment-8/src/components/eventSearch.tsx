@@ -45,6 +45,7 @@ export const EventSearch = ({ filteredEvents }: EventSearchProps) => {
       toast(getToastOptions("deletingEventFailToast"));
     }
   };
+
   useEffect(() => {
     if (editingEvent) {
       setIsEventEdit(true);
