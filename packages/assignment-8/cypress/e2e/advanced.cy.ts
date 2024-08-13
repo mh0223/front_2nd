@@ -3,7 +3,7 @@ describe("8주차 과제 advanced - e2e 테스트", () => {
     cy.visit("http://localhost:5173");
 
     // 날짜 설정
-    const now = new Date(2024, 7, 9, 12, 0, 0);
+    const now = new Date(2024, 7, 16, 12, 0, 0);
     cy.clock(now.getTime());
 
     // 1. 일정 추가
@@ -53,17 +53,11 @@ describe("8주차 과제 advanced - e2e 테스트", () => {
 
     // 입력된 데이터 확인
     // 월별 달력에서 확인
-    // cy.get('[role="monthView"]')
-    //   .find('[role="calendarItem"]')
-    //   .filter((index, element) => element.innerText.trim() === "공연 보러가기") // dom 조작... ㄴ
-    //   .should("be.visible")
-    //   .should("have.length", 3);
-
     cy.get('[role="monthView"]')
       .find('[role="calendarItem"]')
       .filter(':contains("공연 보러가기")')
       .should("be.visible")
-      .should("have.length", 4);
+      .should("have.length", 3);
 
     // 주별 달력 선택
     cy.get('[aria-label="view"]').select("Week");
@@ -87,6 +81,9 @@ describe("8주차 과제 advanced - e2e 테스트", () => {
     // 제목 입력
     cy.get('[data-cy="title"]').clear().type("jisokury club gig");
 
+    // 날짜 입력
+    cy.get('[data-cy="date"]').clear().type("2024-08-07");
+
     // 시작 시간 입력
     cy.get('[data-cy="time"]').first().clear().type("21:00");
 
@@ -99,10 +96,42 @@ describe("8주차 과제 advanced - e2e 테스트", () => {
     // 수정 버튼 클릭
     cy.get('[data-testid="event-submit-button"]').click();
 
+    cy.get('[role="monthView"]')
+      .find('[role="calendarItem"]')
+      .filter(':contains("jisokury club gig")')
+      .should("be.visible")
+      .should("have.length", 4);
+
+    // 주별 달력 선택
+    cy.get('[aria-label="view"]').select("Week");
+
+    // 주별 달력에서 확인
+    cy.get('[role="weekView"]')
+      .find('[role="calendarItem"]')
+      .filter(':contains("jisokury club gig")')
+      .should("be.visible")
+      .should("have.length", 1);
+
+    cy.get('[aria-label="view"]').select("Month");
+
     //3. 일정 삭제
     cy.get('[role="searchItem"]')
       .eq(1)
       .find('[aria-label="Delete event"]')
       .click();
+
+    cy.get('[aria-label="view"]').select("Week");
+
+    cy.get('[role="weekView"]')
+      .find('[role="calendarItem"]')
+      .filter(':contains("알림 테스트 msw")')
+      .should("not.exist");
+
+    cy.get('[aria-label="view"]').select("Month");
+
+    cy.get('[role="monthView"]')
+      .find('[role="calendarItem"]')
+      .filter(':contains("알림 테스트 msw")')
+      .should("not.exist");
   });
 });
