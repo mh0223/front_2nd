@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -130,6 +130,7 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
 
   const loaderWrapperRef = useRef<HTMLDivElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
+
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [page, setPage] = useState(1);
   const [searchOptions, setSearchOptions] = useState<SearchOption>({
@@ -179,10 +180,27 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
       });
   };
 
-  const filteredLectures = getFilteredLectures();
-  const lastPage = Math.ceil(filteredLectures.length / PAGE_SIZE);
-  const visibleLectures = filteredLectures.slice(0, page * PAGE_SIZE);
-  const allMajors = [...new Set(lectures.map((lecture) => lecture.major))];
+  // state 바뀔 때마다 불필요한 연산 반복
+  // react developer tools로 확인한 결과, option이 새로 선택 되었을 때만 몇 십밀리초가 걸리고, 그 이후에 인피니티 스크롤 시에는 몇 밀리초가 걸림(재사용되었기때문)
+  const filteredLectures = useMemo(
+    () => getFilteredLectures(),
+    [searchOptions, lectures]
+  );
+
+  const lastPage = useMemo(
+    () => Math.ceil(filteredLectures.length / PAGE_SIZE),
+    [filteredLectures]
+  );
+
+  const visibleLectures = useMemo(
+    () => filteredLectures.slice(0, page * PAGE_SIZE),
+    [filteredLectures, page]
+  );
+
+  const allMajors = useMemo(
+    () => [...new Set(lectures.map((lecture) => lecture.major))],
+    [lectures]
+  );
 
   const changeSearchOption = (
     field: keyof SearchOption,
