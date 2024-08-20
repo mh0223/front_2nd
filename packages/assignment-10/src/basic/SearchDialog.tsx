@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -30,10 +30,12 @@ import {
   Wrap,
 } from "@chakra-ui/react";
 import { useScheduleContext } from "./ScheduleContext.tsx";
-import { Lecture } from "./types.ts";
+import { Lecture, SearchOption } from "./types.ts";
 import { parseSchedule } from "./utils.ts";
 import axios, { AxiosResponse } from "axios";
-import { DAY_LABELS } from "./constants.ts";
+import { DAY_LABELS, PAGE_SIZE } from "./constants.ts";
+import { MajorList } from "./MajorList.tsx";
+import { LectureList } from "./LectureList.tsx";
 
 interface Props {
   searchInfo: {
@@ -44,14 +46,8 @@ interface Props {
   onClose: () => void;
 }
 
-interface SearchOption {
-  query?: string;
-  grades: number[];
-  days: string[];
-  times: number[];
-  majors: string[];
-  credits?: number;
-}
+const MemoizedMajorList = memo(MajorList);
+const MemoizedLectureList = memo(LectureList);
 
 const TIME_SLOTS = [
   { id: 1, label: "09:00~09:30" },
@@ -79,8 +75,6 @@ const TIME_SLOTS = [
   { id: 23, label: "21:40~22:30" },
   { id: 24, label: "22:35~23:25" },
 ];
-
-const PAGE_SIZE = 100;
 
 const fetchMajors = () => axios.get<Lecture[]>("/schedules-majors.json");
 const fetchLiberalArts = () =>
@@ -192,24 +186,19 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
     [filteredLectures]
   );
 
-  const visibleLectures = useMemo(
-    () => filteredLectures.slice(0, page * PAGE_SIZE),
-    [filteredLectures, page]
-  );
-
   const allMajors = useMemo(
     () => [...new Set(lectures.map((lecture) => lecture.major))],
     [lectures]
   );
 
-  const changeSearchOption = (
-    field: keyof SearchOption,
-    value: SearchOption[typeof field]
-  ) => {
-    setPage(1);
-    setSearchOptions({ ...searchOptions, [field]: value });
-    loaderWrapperRef.current?.scrollTo(0, 0);
-  };
+  const changeSearchOption = useCallback(
+    (field: keyof SearchOption, value: SearchOption[typeof field]) => {
+      setPage(1);
+      setSearchOptions({ ...searchOptions, [field]: value });
+      loaderWrapperRef.current?.scrollTo(0, 0);
+    },
+    []
+  );
 
   const addSchedule = (lecture: Lecture) => {
     if (!searchInfo) return;
@@ -236,7 +225,7 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
       const end = performance.now();
       console.log("모든 API 호출 완료 ", end);
       console.log("API 호출에 걸린 시간(ms): ", end - start);
-      setLectures(results.flatMap((result) => result)); // fetchAllLectures에서 이미 result.data로 반환하고 있기때문에 그 result.data가 여기선 result임. setLectures로 상태 저장
+      setLectures(results); // flatMap 제거
     });
   }, []);
 
@@ -394,55 +383,11 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
                   </Stack>
                 </CheckboxGroup>
               </FormControl>
-
-              <FormControl>
-                <FormLabel>전공</FormLabel>
-                <CheckboxGroup
-                  colorScheme="green"
-                  value={searchOptions.majors}
-                  onChange={(values) =>
-                    changeSearchOption("majors", values as string[])
-                  }
-                >
-                  <Wrap spacing={1} mb={2}>
-                    {searchOptions.majors.map((major) => (
-                      <Tag
-                        key={major}
-                        size="sm"
-                        variant="outline"
-                        colorScheme="blue"
-                      >
-                        <TagLabel>{major.split("<p>").pop()}</TagLabel>
-                        <TagCloseButton
-                          onClick={() =>
-                            changeSearchOption(
-                              "majors",
-                              searchOptions.majors.filter((v) => v !== major)
-                            )
-                          }
-                        />
-                      </Tag>
-                    ))}
-                  </Wrap>
-                  <Stack
-                    spacing={2}
-                    overflowY="auto"
-                    h="100px"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    borderRadius={5}
-                    p={2}
-                  >
-                    {allMajors.map((major) => (
-                      <Box key={major}>
-                        <Checkbox key={major} size="sm" value={major}>
-                          {major.replace(/<p>/gi, " ")}
-                        </Checkbox>
-                      </Box>
-                    ))}
-                  </Stack>
-                </CheckboxGroup>
-              </FormControl>
+              <MemoizedMajorList
+                allMajors={allMajors}
+                selectedMajors={searchOptions.majors}
+                changeSearchOption={changeSearchOption}
+              />
             </HStack>
             <Text align="right">검색결과: {filteredLectures.length}개</Text>
             <Box>
@@ -461,35 +406,11 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
               </Table>
 
               <Box overflowY="auto" maxH="500px" ref={loaderWrapperRef}>
-                <Table size="sm" variant="striped">
-                  <Tbody>
-                    {visibleLectures.map((lecture, index) => (
-                      <Tr key={`${lecture.id}-${index}`}>
-                        <Td width="100px">{lecture.id}</Td>
-                        <Td width="50px">{lecture.grade}</Td>
-                        <Td width="200px">{lecture.title}</Td>
-                        <Td width="50px">{lecture.credits}</Td>
-                        <Td
-                          width="150px"
-                          dangerouslySetInnerHTML={{ __html: lecture.major }}
-                        />
-                        <Td
-                          width="150px"
-                          dangerouslySetInnerHTML={{ __html: lecture.schedule }}
-                        />
-                        <Td width="80px">
-                          <Button
-                            size="sm"
-                            colorScheme="green"
-                            onClick={() => addSchedule(lecture)}
-                          >
-                            추가
-                          </Button>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
+                <MemoizedLectureList
+                  lectures={filteredLectures}
+                  page={page}
+                  handleAddSchedule={addSchedule}
+                />
                 <Box ref={loaderRef} h="20px" />
               </Box>
             </Box>
