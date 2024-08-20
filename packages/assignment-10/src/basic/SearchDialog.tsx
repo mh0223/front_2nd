@@ -91,7 +91,7 @@ const fetchLiberalArts = () =>
 const createCachedFetch = (
   fetchFn: () => Promise<AxiosResponse<Lecture[], any>> // fetchFn: API를 호출하는 원본 함수를 인자로 받음
 ) => {
-  let cache = null; // 클로저 내부에서 캐시 결과를 저장함
+  let cache: AxiosResponse<Lecture[], any> | null = null; // 클로저 내부에서 캐시 결과를 저장함
   return async () => {
     // 캐시가 없을 때만
     if (!cache) {
