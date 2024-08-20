@@ -46,9 +46,6 @@ interface Props {
   onClose: () => void;
 }
 
-const MemoizedMajorList = memo(MajorList);
-const MemoizedLectureList = memo(LectureList);
-
 const TIME_SLOTS = [
   { id: 1, label: "09:00~09:30" },
   { id: 2, label: "09:30~10:00" },
@@ -383,7 +380,7 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
                   </Stack>
                 </CheckboxGroup>
               </FormControl>
-              <MemoizedMajorList
+              <MajorList
                 allMajors={allMajors}
                 selectedMajors={searchOptions.majors}
                 changeSearchOption={changeSearchOption}
@@ -406,7 +403,7 @@ const SearchDialog = ({ searchInfo, onClose }: Props) => {
               </Table>
 
               <Box overflowY="auto" maxH="500px" ref={loaderWrapperRef}>
-                <MemoizedLectureList
+                <LectureList
                   lectures={filteredLectures}
                   page={page}
                   handleAddSchedule={addSchedule}

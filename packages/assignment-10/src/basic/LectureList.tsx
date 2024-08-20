@@ -43,28 +43,26 @@ type LectureListProps = {
   handleAddSchedule: (lecture: Lecture) => void;
 };
 
-export const LectureList = ({
-  lectures,
-  page,
-  handleAddSchedule,
-}: LectureListProps) => {
-  const visibleLectures = useMemo(
-    () => lectures.slice(0, page * PAGE_SIZE),
-    [lectures, page]
-  );
+export const LectureList = memo(
+  ({ lectures, page, handleAddSchedule }: LectureListProps) => {
+    const visibleLectures = useMemo(
+      () => lectures.slice(0, page * PAGE_SIZE),
+      [lectures, page]
+    );
 
-  return (
-    <Table size="sm" variant="striped">
-      <Tbody>
-        {visibleLectures.map((lecture: Lecture, index: number) => (
-          <LectureItem
-            key={`lectureItem-${lecture.id}-${index}`}
-            lecture={lecture}
-            index={index}
-            handleAddSchedule={handleAddSchedule}
-          />
-        ))}
-      </Tbody>
-    </Table>
-  );
-};
+    return (
+      <Table size="sm" variant="striped">
+        <Tbody>
+          {visibleLectures.map((lecture: Lecture, index: number) => (
+            <LectureItem
+              key={`lectureItem-${lecture.id}-${index}`}
+              lecture={lecture}
+              index={index}
+              handleAddSchedule={handleAddSchedule}
+            />
+          ))}
+        </Tbody>
+      </Table>
+    );
+  }
+);
